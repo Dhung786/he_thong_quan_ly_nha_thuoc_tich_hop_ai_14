@@ -11,7 +11,7 @@ from app.api.deps import require_roles
 from app.core.database import get_db
 from app.core.errors import ApplicationConflict
 from app.core.security import hash_password
-from app.models.auth import AuditLog, ROLE_DISPLAY_NAMES, RefreshToken, Role, User
+from app.models.auth import ROLE_DISPLAY_NAMES, AuditLog, RefreshToken, Role, User
 from app.schemas.admin import (
     AdminAuditLogResponse,
     AdminPasswordReset,
@@ -87,7 +87,9 @@ async def admin_summary(_: ManagerUser, session: DbSession) -> AdminSummaryRespo
         .group_by(Role.name)
     )
     role_counts = {name: int(count) for name, count in role_counts_result.all()}
-    audit_events = int((await session.execute(select(func.count()).select_from(AuditLog))).scalar_one())
+    audit_events = int(
+        (await session.execute(select(func.count()).select_from(AuditLog))).scalar_one()
+    )
     return AdminSummaryResponse(
         total_users=total_users,
         active_users=active_users,
