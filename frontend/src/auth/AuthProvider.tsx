@@ -21,11 +21,15 @@ import {
   type AuthContextValue,
   type LoginCredentials,
 } from "./auth-context";
+import {
+  accessExpiryFromLifetime,
+  refreshDelayMs,
+  secondsUntilExpiry,
+} from "./session-timing";
 
 const ACCESS_TOKEN_KEY = "warehouse_ai_access_token";
 const REFRESH_TOKEN_KEY = "warehouse_ai_refresh_token";
 const ACCESS_EXPIRES_AT_KEY = "warehouse_ai_access_expires_at";
-const REFRESH_EARLY_MS = 60_000;
 
 function readStoredTokens(): TokenPair | null {
   const accessToken = sessionStorage.getItem(ACCESS_TOKEN_KEY);
@@ -36,9 +40,7 @@ function readStoredTokens(): TokenPair | null {
   }
 
   const expiresAt = expiresAtRaw ? Number(expiresAtRaw) : Number.NaN;
-  const expiresIn = Number.isFinite(expiresAt)
-    ? Math.max(0, Math.floor((expiresAt - Date.now()) / 1000))
-    : 0;
+  const expiresIn = secondsUntilExpiry(expiresAt, Date.now());
 
   return {
     access_token: accessToken,
@@ -54,7 +56,7 @@ function storeTokens(tokens: TokenPair): void {
   if (tokens.expires_in > 0) {
     sessionStorage.setItem(
       ACCESS_EXPIRES_AT_KEY,
-      String(Date.now() + tokens.expires_in * 1000),
+      String(accessExpiryFromLifetime(Date.now(), tokens.expires_in)),
     );
   } else {
     sessionStorage.removeItem(ACCESS_EXPIRES_AT_KEY);
@@ -151,12 +153,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const expiresAt = expiresAtRaw ? Number(expiresAtRaw) : Number.NaN;
     if (!Number.isFinite(expiresAt)) return;
 
-    const delay = Math.max(1_000, expiresAt - Date.now() - REFRESH_EARLY_MS);
     const timer = window.setTimeout(() => {
       void refreshSession().catch(() => {
         expireLocalSession();
       });
-    }, delay);
+    }, refreshDelayMs(expiresAt, Date.now()));
 
     return () => window.clearTimeout(timer);
   }, [expireLocalSession, refreshSession, sessionGeneration, status]);
