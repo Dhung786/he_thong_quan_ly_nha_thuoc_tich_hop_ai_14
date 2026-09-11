@@ -156,7 +156,7 @@ async def test_duplicate_medicine_code_is_rejected() -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("role_name", ["PHARMACIST", "CASHIER"])
+@pytest.mark.parametrize("role_name", ["PHARMACIST", "CUSTOMER"])
 async def test_uc002_write_access_is_manager_only(role_name: str) -> None:
     username, password = await create_user_with_role(role_name)
     transport = ASGITransport(app=app)
