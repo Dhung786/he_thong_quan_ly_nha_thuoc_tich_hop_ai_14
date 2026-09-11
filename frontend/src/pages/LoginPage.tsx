@@ -71,8 +71,8 @@ export function LoginPage() {
             Hệ thống quản lý nhà thuốc có tích hợp AI
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-8 text-slate-400">
-            Đăng nhập bằng tài khoản Quản lý, Dược sĩ hoặc Thu ngân. Hệ thống cấp giao diện
-            theo vai trò đã xác định trong SRS V1.0.
+            Đăng nhập bằng tài khoản Quản lý, Dược sĩ hoặc Khách hàng. Quyền nghiệp vụ được
+            backend kiểm tra theo vai trò và các quyết định đã được phê duyệt.
           </p>
           <div className="mt-8 grid max-w-lg gap-3 sm:grid-cols-3">
             <InfoCard title="UC001" text="Đăng nhập & phân quyền" />
