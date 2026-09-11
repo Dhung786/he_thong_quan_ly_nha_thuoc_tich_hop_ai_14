@@ -1,5 +1,4 @@
 from collections.abc import Iterable
-from typing import TypeVar
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,14 +6,12 @@ from sqlalchemy.orm import InstrumentedAttribute
 
 from app.models.base import Base
 
-ModelT = TypeVar("ModelT", bound=Base)
-
 
 def ordered_unique_ids(ids: Iterable[int]) -> tuple[int, ...]:
     return tuple(sorted(set(ids)))
 
 
-async def lock_rows_by_id(
+async def lock_rows_by_id[ModelT: Base](
     session: AsyncSession,
     *,
     model: type[ModelT],
