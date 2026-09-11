@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../auth/auth-context";
 import { ManagerSidebar } from "../components/ManagerSidebar";
+import { formatVnd, managerDemoMetrics } from "../lib/demo-data";
 import { healthRequest, medicinesRequest } from "../lib/api";
 
 const roleLabels: Record<string, string> = {
@@ -63,41 +64,28 @@ export function DashboardPage() {
         </header>
 
         <main className="p-5 sm:p-8 lg:p-10">
+          <div className="mb-5 flex items-center gap-2 text-xs text-violet-300">
+            <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 font-bold">DEMO</span>
+            <span className="text-slate-500">Các chỉ số doanh thu, tồn kho và hạn dùng bên dưới là số liệu minh họa.</span>
+          </div>
+
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard label="Doanh thu" value="—" note="Chưa có dữ liệu bán hàng" accent="emerald" />
+            <MetricCard label="Doanh thu" value={formatVnd(managerDemoMetrics.revenue)} note={`${managerDemoMetrics.invoicesToday} hóa đơn hôm nay · Demo`} accent="emerald" demo />
             <MetricCard label="Tổng số thuốc" value={totalMedicines} note="Dữ liệu thật từ danh mục thuốc" />
-            <MetricCard label="Thuốc tồn thấp" value="—" note="Chưa có dữ liệu tồn kho" accent="amber" />
-            <MetricCard label="Thuốc sắp hết hạn" value="—" note="Chưa có dữ liệu hạn sử dụng" accent="rose" />
+            <MetricCard label="Thuốc tồn thấp" value={managerDemoMetrics.lowStockCount} note={`Tổng tồn minh họa: ${managerDemoMetrics.inventoryUnits} đơn vị`} accent="amber" demo />
+            <MetricCard label="Thuốc sắp hết hạn" value={managerDemoMetrics.expiringCount} note="Trong 90 ngày tới · Demo" accent="rose" demo />
           </section>
 
           <section className="mt-7 grid gap-5 xl:grid-cols-2">
-            <FeaturePanel title="2. Quản lý thuốc" icon="💊" to="/catalog" status="Đã có dữ liệu thật">
-              Danh sách thuốc, nhóm thuốc và đơn vị tính được lưu trong PostgreSQL.
-            </FeaturePanel>
-            <FeaturePanel title="3. Quản lý nhập thuốc" icon="📥" to="/manager/imports" status="Đang chờ API">
-              Quản lý lô nhập, hạn sử dụng, số lượng, giá nhập, giá bán và nhà cung cấp.
-            </FeaturePanel>
-            <FeaturePanel title="4. Bán thuốc" icon="🧾" to="/manager/sales" status="Đang chờ API">
-              Tìm thuốc, kiểm tra tồn, nhập số lượng, tính tiền và tạo hóa đơn.
-            </FeaturePanel>
-            <FeaturePanel title="5. Tồn kho" icon="📦" to="/manager/inventory" status="Đang chờ API">
-              Theo dõi tồn theo thuốc hoặc lô và cảnh báo khi thấp hơn ngưỡng.
-            </FeaturePanel>
-            <FeaturePanel title="6. Hạn sử dụng" icon="⏳" to="/manager/expiry" status="Đang chờ API">
-              Theo dõi thuốc sắp hết hạn và thuốc đã hết hạn theo từng lô.
-            </FeaturePanel>
-            <FeaturePanel title="7. Tra cứu thuốc" icon="🔎" to="/manager/lookup" status="Đang hoàn thiện">
-              Tra cứu theo tên, mã, nhóm, lô hoặc hạn sử dụng.
-            </FeaturePanel>
-            <FeaturePanel title="8. Báo cáo - Thống kê" icon="📈" to="/manager/reports" status="Đang chờ API">
-              Báo cáo doanh thu, tồn kho và thuốc sắp hết hạn theo khoảng thời gian.
-            </FeaturePanel>
-            <FeaturePanel title="9. Trợ lý AI" icon="🤖" to="/manager/ai" status={aiConfigured ? "AI đã cấu hình" : "AI chưa cấu hình"}>
-              Tóm tắt thông tin thuốc, hỗ trợ báo cáo hạn dùng và hỏi đáp quy trình nội bộ.
-            </FeaturePanel>
-            <FeaturePanel title="10. Tài khoản / Phân quyền" icon="👥" to="/manager/users" status="Đang chờ API">
-              Quản lý tài khoản, vai trò, trạng thái tài khoản và đặt lại mật khẩu.
-            </FeaturePanel>
+            <FeaturePanel title="2. Quản lý thuốc" icon="💊" to="/catalog" status="Đã có dữ liệu thật">Danh sách thuốc, nhóm thuốc và đơn vị tính được lưu trong PostgreSQL.</FeaturePanel>
+            <FeaturePanel title="3. Quản lý nhập thuốc" icon="📥" to="/manager/imports" status="Có dữ liệu demo">Quản lý lô nhập, hạn sử dụng, số lượng, giá nhập, giá bán và nhà cung cấp.</FeaturePanel>
+            <FeaturePanel title="4. Bán thuốc" icon="🧾" to="/manager/sales" status="Có dữ liệu demo">Tìm thuốc, kiểm tra tồn, nhập số lượng, tính tiền và tạo hóa đơn.</FeaturePanel>
+            <FeaturePanel title="5. Tồn kho" icon="📦" to="/manager/inventory" status="Có dữ liệu demo">Theo dõi tồn theo thuốc hoặc lô và cảnh báo khi thấp hơn ngưỡng.</FeaturePanel>
+            <FeaturePanel title="6. Hạn sử dụng" icon="⏳" to="/manager/expiry" status="Có dữ liệu demo">Theo dõi thuốc sắp hết hạn và thuốc đã hết hạn theo từng lô.</FeaturePanel>
+            <FeaturePanel title="7. Tra cứu thuốc" icon="🔎" to="/manager/lookup" status="Có dữ liệu demo">Tra cứu theo tên, mã, nhóm, lô hoặc hạn sử dụng.</FeaturePanel>
+            <FeaturePanel title="8. Báo cáo - Thống kê" icon="📈" to="/manager/reports" status="Có dữ liệu demo">Báo cáo doanh thu, tồn kho và thuốc sắp hết hạn theo khoảng thời gian.</FeaturePanel>
+            <FeaturePanel title="9. Trợ lý AI" icon="🤖" to="/manager/ai" status={aiConfigured ? "AI đã cấu hình" : "Có giao diện demo"}>Tóm tắt thông tin thuốc, hỗ trợ báo cáo hạn dùng và hỏi đáp quy trình nội bộ.</FeaturePanel>
+            <FeaturePanel title="10. Tài khoản / Phân quyền" icon="👥" to="/manager/users" status="Có dữ liệu demo">Quản lý tài khoản, vai trò, trạng thái tài khoản và đặt lại mật khẩu.</FeaturePanel>
           </section>
 
           <section className="mt-7 grid gap-4 md:grid-cols-3">
@@ -111,9 +99,9 @@ export function DashboardPage() {
   );
 }
 
-function MetricCard({ label, value, note, accent = "default" }: { label: string; value: string | number; note: string; accent?: "default" | "amber" | "emerald" | "rose" }) {
+function MetricCard({ label, value, note, accent = "default", demo = false }: { label: string; value: string | number; note: string; accent?: "default" | "amber" | "emerald" | "rose"; demo?: boolean }) {
   const valueClass = accent === "amber" ? "text-amber-400" : accent === "emerald" ? "text-emerald-400" : accent === "rose" ? "text-rose-400" : "text-slate-50";
-  return <div className="rounded-3xl border border-slate-700/70 bg-[#18253a] p-6 shadow-xl shadow-slate-950/10"><p className="text-sm text-slate-400">{label}</p><p className={`mt-3 text-3xl font-black ${valueClass}`}>{value}</p><p className="mt-3 text-xs leading-5 text-slate-500">{note}</p></div>;
+  return <div className="rounded-3xl border border-slate-700/70 bg-[#18253a] p-6 shadow-xl shadow-slate-950/10"><div className="flex items-center justify-between gap-2"><p className="text-sm text-slate-400">{label}</p>{demo && <span className="rounded-full bg-violet-500/10 px-2 py-1 text-[10px] font-bold text-violet-300">DEMO</span>}</div><p className={`mt-3 text-3xl font-black ${valueClass}`}>{value}</p><p className="mt-3 text-xs leading-5 text-slate-500">{note}</p></div>;
 }
 
 function FeaturePanel({ title, icon, to, status, children }: { title: string; icon: string; to: string; status: string; children: string }) {
