@@ -3,7 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../auth/auth-context";
 import { ManagerSidebar } from "../components/ManagerSidebar";
+import { RoleUseCasePanel } from "../components/RoleUseCasePanel";
 import { healthRequest, medicinesRequest } from "../lib/api";
+import { managerUseCases } from "../lib/role-use-cases";
 
 const roleLabels: Record<string, string> = {
   MANAGER: "Quản lý",
@@ -69,6 +71,14 @@ export function DashboardPage() {
             <MetricCard label="Thuốc tồn thấp" value="—" note="Chờ UC006" accent="amber" />
             <MetricCard label="Thuốc sắp hết hạn" value="—" note="Chờ UC008" accent="rose" />
           </section>
+
+          <div className="mt-7">
+            <RoleUseCasePanel
+              title="Use Case dành cho Quản lý"
+              subtitle="Các Use Case được gắn trực tiếp vào giao diện Quản lý theo SRS v1.0. UC005 được hiển thị theo đặc tả chi tiết của UC005, trong đó Quản lý là một tác nhân."
+              useCases={managerUseCases}
+            />
+          </div>
 
           <section className="mt-7 grid gap-5 xl:grid-cols-2">
             <FeaturePanel title="2. Quản lý thuốc" icon="💊" to="/catalog" status="UC002 đang hoạt động">
