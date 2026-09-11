@@ -10,7 +10,6 @@ from app.core.errors import ApplicationConflict
 from app.core.logging import configure_logging, get_logger
 from app.core.middleware import CorrelationIdMiddleware
 
-
 configure_logging()
 application_logger = get_logger("application")
 
