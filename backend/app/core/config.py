@@ -30,7 +30,13 @@ class Settings(BaseSettings):
     seed_customer_username: str | None = None
     seed_customer_password: str | None = None
     cors_origins: list[str] = ["http://localhost:5173"]
+
     ai_provider: str = "disabled"
+    ai_api_key: str | None = None
+    ai_base_url: str | None = None
+    ai_model: str | None = None
+    ai_timeout_seconds: float = 30.0
+    ai_max_tokens: int = 700
 
     @model_validator(mode="after")
     def validate_security_and_seed_configuration(self) -> Self:
@@ -49,6 +55,15 @@ class Settings(BaseSettings):
             if bool(username) != bool(password):
                 raise ValueError(
                     f"Seed username/password for {role_name} must be provided together"
+                )
+
+        provider = self.ai_provider.strip().lower()
+        if provider not in {"disabled", "openai_compatible"}:
+            raise ValueError("AI_PROVIDER must be disabled or openai_compatible")
+        if provider == "openai_compatible" and self.app_env.strip().lower() == "production":
+            if not (self.ai_api_key and self.ai_base_url and self.ai_model):
+                raise ValueError(
+                    "Production AI provider requires AI_API_KEY, AI_BASE_URL and AI_MODEL"
                 )
         return self
 
