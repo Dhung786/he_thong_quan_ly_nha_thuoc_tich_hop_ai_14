@@ -2,8 +2,11 @@ import asyncio
 from uuid import uuid4
 
 import pytest
+from sqlalchemy import select
 
 from app.core.database import SessionLocal
+from app.core.transactions import transaction_boundary
+from app.models.idempotency import IdempotencyRecord
 from app.services.idempotency import (
     IdempotencyConflict,
     claim,
@@ -112,3 +115,42 @@ async def test_concurrent_same_key_has_one_initial_claim_and_one_replay() -> Non
 
     results = await asyncio.gather(worker(), worker())
     assert sorted(results) == [False, True]
+
+
+@pytest.mark.asyncio
+async def test_failed_command_rolls_back_idempotency_claim_for_retry() -> None:
+    scope = f"test.rollback.{uuid4()}"
+    key = str(uuid4())
+    request_hash = hash_payload(b"retryable-input")
+
+    async with SessionLocal() as session:
+        with pytest.raises(RuntimeError, match="fail after claim"):
+            async with transaction_boundary(session):
+                first = await claim(
+                    session,
+                    scope=scope,
+                    key=key,
+                    request_hash=request_hash,
+                )
+                assert first.is_replay is False
+                raise RuntimeError("fail after claim")
+
+    async with SessionLocal() as session:
+        result = await session.execute(
+            select(IdempotencyRecord).where(
+                IdempotencyRecord.scope == scope,
+                IdempotencyRecord.idempotency_key == key,
+            )
+        )
+        assert result.scalar_one_or_none() is None
+
+    async with SessionLocal() as session:
+        async with transaction_boundary(session):
+            retry = await claim(
+                session,
+                scope=scope,
+                key=key,
+                request_hash=request_hash,
+            )
+            assert retry.is_replay is False
+            complete(retry.record)
