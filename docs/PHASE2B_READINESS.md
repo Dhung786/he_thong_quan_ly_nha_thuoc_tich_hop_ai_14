@@ -64,7 +64,13 @@ See GitHub issue #2 for the active unblock request.
 - standardized required audit detail keys for security and future inventory events;
 - kept `stock_delta` as text in the technical audit payload so this branch does not choose integer vs decimal quantity semantics;
 - refactored authentication audit events through the shared helper;
-- extended integration tests to verify audit correlation and confirm secrets/tokens are not stored in audit details.
+- extended integration tests to verify audit correlation and confirm secrets/tokens are not stored in audit details;
+- added the `idempotency_records` technical table in Alembic revision `0003_idempotency_infrastructure`;
+- enforced uniqueness for `scope + idempotency_key`;
+- added request payload hashing so the same key cannot silently represent different input;
+- added claim/replay/completion service behavior without exposing a business endpoint;
+- added tests for completed replay detection, conflicting input rejection and scope isolation;
+- CI run #20 verified Ruff, mypy, migration from an empty PostgreSQL database, seed, pytest and the frontend quality gates.
 
 ## Next business implementation after unblock
 
@@ -76,7 +82,7 @@ Once the approved Phase 1 baseline is available:
 4. Implement master-data APIs/UI.
 5. Implement phiếu nhập and `TON_DAU_KY` transaction flow.
 6. Implement phiếu xuất with deterministic ascending row locks.
-7. Implement idempotency and cancellation.
+7. Bind the verified idempotency infrastructure to stock-changing commands and implement cancellation.
 8. Run required concurrency test before advancing to Phase 2C.
 
 No business endpoint should be exposed before its permission and data contract are traceable to the approved baseline.
