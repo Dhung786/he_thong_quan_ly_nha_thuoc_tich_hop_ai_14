@@ -24,43 +24,93 @@ import {
 
 const ACCESS_TOKEN_KEY = "warehouse_ai_access_token";
 const REFRESH_TOKEN_KEY = "warehouse_ai_refresh_token";
+const ACCESS_EXPIRES_AT_KEY = "warehouse_ai_access_expires_at";
+const REFRESH_EARLY_MS = 60_000;
 
 function readStoredTokens(): TokenPair | null {
   const accessToken = sessionStorage.getItem(ACCESS_TOKEN_KEY);
   const refreshToken = sessionStorage.getItem(REFRESH_TOKEN_KEY);
+  const expiresAtRaw = sessionStorage.getItem(ACCESS_EXPIRES_AT_KEY);
   if (!accessToken || !refreshToken) {
     return null;
   }
+
+  const expiresAt = expiresAtRaw ? Number(expiresAtRaw) : Number.NaN;
+  const expiresIn = Number.isFinite(expiresAt)
+    ? Math.max(0, Math.floor((expiresAt - Date.now()) / 1000))
+    : 0;
 
   return {
     access_token: accessToken,
     refresh_token: refreshToken,
     token_type: "bearer",
-    expires_in: 0,
+    expires_in: expiresIn,
   };
 }
 
 function storeTokens(tokens: TokenPair): void {
   sessionStorage.setItem(ACCESS_TOKEN_KEY, tokens.access_token);
   sessionStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
+  if (tokens.expires_in > 0) {
+    sessionStorage.setItem(
+      ACCESS_EXPIRES_AT_KEY,
+      String(Date.now() + tokens.expires_in * 1000),
+    );
+  } else {
+    sessionStorage.removeItem(ACCESS_EXPIRES_AT_KEY);
+  }
 }
 
 function clearTokens(): void {
   sessionStorage.removeItem(ACCESS_TOKEN_KEY);
   sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+  sessionStorage.removeItem(ACCESS_EXPIRES_AT_KEY);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthContextValue["status"]>("loading");
   const [user, setUser] = useState<CurrentUser | null>(null);
+  const [sessionGeneration, setSessionGeneration] = useState(0);
   const bootstrapStarted = useRef(false);
+  const refreshInFlight = useRef<Promise<void> | null>(null);
 
   const establishSession = useCallback(async (tokens: TokenPair) => {
     const currentUser = await currentUserRequest(tokens.access_token);
     storeTokens(tokens);
     setUser(currentUser);
     setStatus("authenticated");
+    setSessionGeneration((value) => value + 1);
   }, []);
+
+  const expireLocalSession = useCallback(() => {
+    clearTokens();
+    setUser(null);
+    setStatus("unauthenticated");
+  }, []);
+
+  const refreshSession = useCallback(async () => {
+    if (refreshInFlight.current) {
+      return refreshInFlight.current;
+    }
+
+    const stored = readStoredTokens();
+    if (!stored?.refresh_token) {
+      expireLocalSession();
+      return;
+    }
+
+    const refreshWork = (async () => {
+      const replacement = await refreshRequest(stored.refresh_token);
+      await establishSession(replacement);
+    })();
+    refreshInFlight.current = refreshWork;
+
+    try {
+      await refreshWork;
+    } finally {
+      refreshInFlight.current = null;
+    }
+  }, [establishSession, expireLocalSession]);
 
   useEffect(() => {
     if (bootstrapStarted.current) return;
@@ -79,24 +129,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStatus("authenticated");
       } catch (error) {
         if (!(error instanceof ApiError) || error.status !== 401) {
-          clearTokens();
-          setStatus("unauthenticated");
+          expireLocalSession();
           return;
         }
 
         try {
-          const replacement = await refreshRequest(stored.refresh_token);
-          await establishSession(replacement);
+          await refreshSession();
         } catch {
-          clearTokens();
-          setUser(null);
-          setStatus("unauthenticated");
+          expireLocalSession();
         }
       }
     }
 
     void bootstrap();
-  }, [establishSession]);
+  }, [expireLocalSession, refreshSession]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    const expiresAtRaw = sessionStorage.getItem(ACCESS_EXPIRES_AT_KEY);
+    const expiresAt = expiresAtRaw ? Number(expiresAtRaw) : Number.NaN;
+    if (!Number.isFinite(expiresAt)) return;
+
+    const delay = Math.max(1_000, expiresAt - Date.now() - REFRESH_EARLY_MS);
+    const timer = window.setTimeout(() => {
+      void refreshSession().catch(() => {
+        expireLocalSession();
+      });
+    }, delay);
+
+    return () => window.clearTimeout(timer);
+  }, [expireLocalSession, refreshSession, sessionGeneration, status]);
 
   const login = useCallback(
     async ({ username, password }: LoginCredentials) => {
@@ -104,13 +167,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         await establishSession(tokens);
       } catch (error) {
-        clearTokens();
-        setUser(null);
-        setStatus("unauthenticated");
+        expireLocalSession();
         throw error;
       }
     },
-    [establishSession],
+    [establishSession, expireLocalSession],
   );
 
   const logout = useCallback(async () => {
@@ -120,11 +181,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await logoutRequest(stored.refresh_token);
       }
     } finally {
-      clearTokens();
-      setUser(null);
-      setStatus("unauthenticated");
+      expireLocalSession();
     }
-  }, []);
+  }, [expireLocalSession]);
 
   const value = useMemo<AuthContextValue>(
     () => ({ status, user, login, logout }),
