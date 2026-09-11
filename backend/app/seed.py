@@ -65,9 +65,9 @@ async def seed() -> None:
         )
         await _seed_user(
             session,
-            role=roles["CASHIER"],
-            username=settings.seed_cashier_username,
-            password=settings.seed_cashier_password,
+            role=roles["CUSTOMER"],
+            username=settings.seed_customer_username,
+            password=settings.seed_customer_password,
         )
 
         metadata_result = await session.execute(
