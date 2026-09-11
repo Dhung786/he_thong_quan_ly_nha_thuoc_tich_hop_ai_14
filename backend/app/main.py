@@ -82,10 +82,27 @@ async def status() -> dict[str, str]:
 @app.get("/health")
 async def health() -> JSONResponse:
     database_status = "ok"
+    migration_status = "unavailable"
     status_code = 200
+
     try:
         async with engine.connect() as connection:
             await connection.execute(text("SELECT 1"))
+            try:
+                result = await connection.execute(text("SELECT version_num FROM alembic_version"))
+                migration_status = result.scalar_one_or_none() or "missing"
+                if migration_status == "missing":
+                    status_code = 503
+            except Exception as exc:
+                status_code = 503
+                application_logger.error(
+                    "Migration visibility check failed",
+                    extra={
+                        "event": "migration_health_failed",
+                        "component": "migration",
+                        "error_type": type(exc).__name__,
+                    },
+                )
     except Exception as exc:
         database_status = "unavailable"
         status_code = 503
@@ -103,6 +120,7 @@ async def health() -> JSONResponse:
         content={
             "core": "ok",
             "database": database_status,
+            "migration": migration_status,
             "ai": "not_configured" if settings.ai_provider == "disabled" else "configured",
         },
     )
