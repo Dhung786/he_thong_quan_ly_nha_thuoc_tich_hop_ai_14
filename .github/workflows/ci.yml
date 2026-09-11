@@ -29,6 +29,8 @@ jobs:
       DATABASE_URL: postgresql+asyncpg://warehouse:warehouse@localhost:5432/warehouse_ai_test
       JWT_SECRET: CI_ONLY_NOT_A_REAL_SECRET_CHANGE_ME
       APP_ENV: test
+      SEED_ADMIN_USERNAME: ci-admin
+      SEED_ADMIN_PASSWORD: CI_ADMIN_ONLY_CHANGE_ME_123!
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

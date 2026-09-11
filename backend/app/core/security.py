@@ -1,3 +1,5 @@
+import hashlib
+import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -18,10 +20,15 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 
 def create_access_token(subject: str, role: str, expires_delta: timedelta | None = None) -> str:
-    expires_at = datetime.now(UTC) + (
-        expires_delta or timedelta(minutes=settings.access_token_expire_minutes)
-    )
-    payload = {"sub": subject, "role": role, "exp": expires_at}
+    now = datetime.now(UTC)
+    expires_at = now + (expires_delta or timedelta(minutes=settings.access_token_expire_minutes))
+    payload = {
+        "sub": subject,
+        "role": role,
+        "type": "access",
+        "iat": now,
+        "exp": expires_at,
+    }
     token = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
     if not isinstance(token, str):
         raise TypeError("JWT encoder returned a non-string token")
@@ -38,6 +45,14 @@ def decode_access_token(token: str) -> dict[str, Any]:
     except JWTError as exc:
         raise ValueError("Invalid access token") from exc
 
-    if not payload.get("sub") or not payload.get("role"):
+    if payload.get("type") != "access" or not payload.get("sub") or not payload.get("role"):
         raise ValueError("Invalid access token claims")
     return payload
+
+
+def generate_refresh_token() -> str:
+    return secrets.token_urlsafe(48)
+
+
+def hash_refresh_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
