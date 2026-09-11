@@ -1,17 +1,16 @@
 import { NavLink } from "react-router-dom";
 
 const pharmacistNavItems = [
-  { to: "/dashboard", icon: "📊", label: "Dashboard", uc: "UC001", end: true },
-  { to: "/pharmacist/medicines", icon: "🔎", label: "Tra cứu thuốc", uc: "UC007" },
-  { to: "/pharmacist/inventory", icon: "📦", label: "Tồn kho & lô thuốc", uc: "UC006" },
-  { to: "/pharmacist/suppliers", icon: "🏢", label: "Nhà cung cấp", uc: "UC005" },
-  { to: "/pharmacist/alerts", icon: "⚠️", label: "Cảnh báo", uc: "UC008" },
+  { to: "/dashboard", icon: "📊", label: "Dashboard", end: true },
+  { to: "/pharmacist/medicines", icon: "🔎", label: "Tra cứu thuốc" },
+  { to: "/pharmacist/inventory", icon: "📦", label: "Tồn kho & lô thuốc" },
+  { to: "/pharmacist/suppliers", icon: "🏢", label: "Nhà cung cấp" },
+  { to: "/pharmacist/alerts", icon: "⚠️", label: "Cảnh báo" },
   { to: "/pharmacist/sales-support", icon: "🧾", label: "Hỗ trợ bán thuốc" },
-  { to: "/pharmacist/ai", icon: "🤖", label: "AI Dược sĩ", uc: "UC010 · UC011 · UC013" },
-  { to: "/pharmacist/process", icon: "📚", label: "Quy trình nội bộ", uc: "UC012" },
-  { to: "/pharmacist/reports", icon: "📈", label: "Báo cáo", uc: "UC009" },
+  { to: "/pharmacist/ai", icon: "🤖", label: "AI Dược sĩ" },
+  { to: "/pharmacist/process", icon: "📚", label: "Quy trình nội bộ" },
+  { to: "/pharmacist/reports", icon: "📈", label: "Báo cáo" },
   { to: "/pharmacist/profile", icon: "⚙️", label: "Hồ sơ" },
-  { to: "/use-cases", icon: "📋", label: "Use Cases SRS", uc: "10 UC" },
 ];
 
 export function PharmacistSidebar() {
@@ -43,15 +42,9 @@ export function PharmacistSidebar() {
           >
             <span className="w-5 text-center text-base" aria-hidden="true">{item.icon}</span>
             <span className="min-w-0 flex-1">{item.label}</span>
-            {item.uc && <span className="shrink-0 rounded-md bg-slate-950/40 px-1.5 py-0.5 text-[9px] font-bold text-cyan-400">{item.uc}</span>}
           </NavLink>
         ))}
       </nav>
-
-      <div className="mt-10 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-xs leading-5 text-slate-500 lg:mt-16">
-        <div className="mb-2 text-lg">✨</div>
-        <p>Ứng dụng AI đồng hành cùng dược sĩ mỗi ngày.</p>
-      </div>
     </aside>
   );
 }
