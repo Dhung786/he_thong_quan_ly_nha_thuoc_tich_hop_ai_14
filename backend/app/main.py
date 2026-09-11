@@ -11,11 +11,19 @@ from app.core.database import engine
 from app.core.errors import ApplicationConflict
 from app.core.logging import configure_logging, get_logger
 from app.core.middleware import CorrelationIdMiddleware
+from app.schemas.common import HealthResponse, ServiceStatusResponse
 
 configure_logging()
 application_logger = get_logger("application")
 
-app = FastAPI(title=settings.app_name, version="0.1.0")
+app = FastAPI(
+    title=settings.app_name,
+    version="0.1.0",
+    description=(
+        "Technical foundation API for Warehouse AI. Business inventory endpoints are "
+        "added only after their schema and permission contract are approved."
+    ),
+)
 app.add_middleware(CorrelationIdMiddleware)
 app.add_middleware(
     CORSMiddleware,
@@ -159,12 +167,18 @@ async def unexpected_error_handler(request: Request, exc: Exception) -> JSONResp
     )
 
 
-@app.get("/api/v1/status")
-async def status() -> dict[str, str]:
-    return {"service": "backend", "status": "ok"}
+@app.get("/api/v1/status", response_model=ServiceStatusResponse)
+async def status() -> ServiceStatusResponse:
+    return ServiceStatusResponse(service="backend", status="ok")
 
 
-@app.get("/health")
+@app.get(
+    "/health",
+    response_model=HealthResponse,
+    responses={
+        503: {"model": HealthResponse, "description": "Core dependency is unavailable"},
+    },
+)
 async def health() -> JSONResponse:
     database_status = "ok"
     migration_status = "unavailable"
