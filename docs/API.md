@@ -1,6 +1,6 @@
-# API Documentation — Current Implemented Surface
+# API Documentation — Pharmacy AI current surface
 
-> Tài liệu này mô tả **chỉ API đang tồn tại trong source code hiện tại**. API nghiệp vụ kho chưa được mô tả/giả định khi Data Dictionary và Permission Matrix chưa được phê duyệt.
+Tài liệu này mô tả **chỉ API đang tồn tại trong source code hiện tại** của Hệ thống quản lý nhà thuốc có tích hợp AI — Nhóm 14.
 
 ## Base URL
 
@@ -10,13 +10,13 @@ Local Docker Compose:
 http://localhost:8000
 ```
 
-API nghiệp vụ/authentication dùng prefix:
+API dùng prefix:
 
 ```text
 /api/v1
 ```
 
-FastAPI interactive documentation khi backend đang chạy:
+Swagger:
 
 ```text
 http://localhost:8000/docs
@@ -24,19 +24,17 @@ http://localhost:8000/docs
 
 ## Correlation ID
 
-Mỗi HTTP response đi qua application middleware có header:
+Mỗi HTTP response qua middleware có header:
 
 ```text
 X-Correlation-ID: <uuid>
 ```
 
-Client có thể gửi `X-Correlation-ID` dạng UUID hợp lệ. Nếu thiếu hoặc không hợp lệ, server tạo UUID mới.
-
-User-facing error quan trọng trả `correlation_id` để hỗ trợ tra log mà không lộ exception nội bộ.
+Client có thể gửi `X-Correlation-ID` UUID hợp lệ. Nếu thiếu hoặc không hợp lệ, server tạo UUID mới.
 
 ## Error envelope
 
-Các lỗi chuẩn hiện dùng dạng:
+Ví dụ:
 
 ```json
 {
@@ -46,46 +44,22 @@ Các lỗi chuẩn hiện dùng dạng:
 }
 ```
 
-Semantics hiện có:
+| HTTP | Ý nghĩa |
+|---|---|
+| 401 | Chưa xác thực / token không hợp lệ hoặc hết hạn |
+| 403 | Đã xác thực nhưng không đủ quyền |
+| 404 | Resource không tồn tại |
+| 409 | Conflict nghiệp vụ/dữ liệu |
+| 422 | Request validation fail |
+| 500 | Unexpected internal error |
 
-| HTTP | `error` | Ý nghĩa |
-|---|---|---|
-| 401 | `unauthorized` | Chưa xác thực / token không hợp lệ hoặc hết hạn |
-| 403 | `forbidden` | Đã xác thực nhưng không đủ quyền |
-| 404 | `not_found` | Resource/route không tồn tại |
-| 409 | mã conflict cụ thể | Business/state/concurrency conflict |
-| 422 | `validation_error` | Request validation fail |
-| 500 | `internal_error` | Unexpected internal error |
-
-401 giữ header:
-
-```text
-WWW-Authenticate: Bearer
-```
-
-### 422 validation
-
-422 không echo giá trị input bị từ chối. Response chỉ công khai vị trí field và loại validation:
-
-```json
-{
-  "error": "validation_error",
-  "message": "Request validation failed",
-  "correlation_id": "11111111-1111-4111-8111-111111111111",
-  "details": [
-    {
-      "location": ["body", "password"],
-      "type": "string_too_long"
-    }
-  ]
-}
-```
+401 giữ header `WWW-Authenticate: Bearer`.
 
 ## System endpoints
 
 ### `GET /api/v1/status`
 
-Authentication: không yêu cầu.
+Không yêu cầu authentication.
 
 Response `200`:
 
@@ -98,40 +72,51 @@ Response `200`:
 
 ### `GET /health`
 
-Authentication: không yêu cầu.
+Không yêu cầu authentication.
 
-Response `200` khi core/database/migration sẵn sàng, ví dụ:
+Khi stack hiện tại sẵn sàng:
 
 ```json
 {
   "core": "ok",
   "database": "ok",
-  "migration": "0003_idempotency_infrastructure",
+  "migration": "0005_customer_role",
   "ai": "not_configured"
 }
 ```
 
-Có thể trả `503` khi database hoặc migration visibility không sẵn sàng. AI là optional provider; `not_configured` không làm core warehouse system unhealthy.
+`ai=not_configured` không làm core application unhealthy.
 
-## Authentication endpoints
+## Roles hiện tại
+
+Theo quyết định người dùng mới nhất, hệ thống có đúng ba role:
+
+```text
+MANAGER
+PHARMACIST
+CUSTOMER
+```
+
+Tên hiển thị:
+
+- `MANAGER` → Quản lý
+- `PHARMACIST` → Dược sĩ
+- `CUSTOMER` → Khách hàng
+
+`CUSTOMER` không tự động kế thừa quyền cũ của Thu ngân. Quyền nghiệp vụ chỉ được mở khi có quyết định được phê duyệt và phải enforce ở backend.
+
+## Authentication endpoints — UC001
 
 ### `POST /api/v1/auth/login`
-
-Authentication: không yêu cầu.
 
 Request:
 
 ```json
 {
-  "username": "admin",
+  "username": "manager",
   "password": "<password>"
 }
 ```
-
-Validation hiện tại:
-
-- `username`: 1–100 ký tự.
-- `password`: 1–256 ký tự.
 
 Response `200`:
 
@@ -144,21 +129,7 @@ Response `200`:
 }
 ```
 
-Possible statuses:
-
-- `200` — đăng nhập thành công.
-- `401` — credentials không hợp lệ hoặc user inactive.
-- `422` — request validation fail.
-
-Security notes:
-
-- Password được verify bằng password hash an toàn; plaintext password không lưu DB.
-- Raw refresh token không lưu DB; persistence dùng token hash.
-- Login success được audit với correlation ID.
-
 ### `POST /api/v1/auth/refresh`
-
-Authentication: refresh token trong request body.
 
 Request:
 
@@ -168,19 +139,7 @@ Request:
 }
 ```
 
-Response `200`: token pair mới có cùng schema với login.
-
-Behavior:
-
-- Refresh token hợp lệ được rotate.
-- Token cũ bị revoke sau rotation.
-- Replay token cũ bị từ chối.
-
-Possible statuses:
-
-- `200` — rotation thành công.
-- `401` — refresh token invalid/revoked/expired hoặc user không còn active.
-- `422` — request validation fail.
+Refresh token hợp lệ được rotate và token cũ bị revoke.
 
 ### `POST /api/v1/auth/logout`
 
@@ -192,62 +151,87 @@ Request:
 }
 ```
 
-Response:
-
-```text
-204 No Content
-```
-
-Logout revoke refresh token nếu token đang active. Gọi logout với token không tồn tại/đã revoke không làm thay đổi stock hay nghiệp vụ khác.
+Response `204 No Content`.
 
 ### `GET /api/v1/auth/me`
 
-Authentication:
+Header:
 
 ```text
 Authorization: Bearer <access-token>
 ```
 
-Response `200`:
+Ví dụ response:
 
 ```json
 {
   "id": 1,
-  "username": "admin",
-  "role": "ADMIN",
+  "username": "customer",
+  "role": "CUSTOMER",
   "is_active": true
 }
 ```
 
-Possible statuses:
+Access token bị từ chối nếu user inactive hoặc role claim không còn khớp PostgreSQL.
 
-- `200` — access token hợp lệ và user active.
-- `401` — thiếu/invalid/expired JWT, user inactive, hoặc role claim không còn khớp DB.
+## UC002 — Quản lý danh mục thuốc
 
-## Roles currently defined
+Các endpoint UC002 hiện yêu cầu role `MANAGER`.
 
-Hệ thống chỉ định nghĩa ba role:
+### Nhóm thuốc
 
 ```text
-ADMIN
-WAREHOUSE_KEEPER
-ACCOUNTANT
+GET    /api/v1/catalog/groups
+POST   /api/v1/catalog/groups
+PUT    /api/v1/catalog/groups/{group_id}
+DELETE /api/v1/catalog/groups/{group_id}
 ```
 
-Generic backend role guard đã tồn tại, nhưng **business action permission mapping chưa được gán** vì cần Permission Matrix `ROLE × FR × ACTION × API` được phê duyệt.
+### Đơn vị tính
 
-## API chưa được triển khai
+```text
+GET    /api/v1/catalog/units
+POST   /api/v1/catalog/units
+PUT    /api/v1/catalog/units/{unit_id}
+DELETE /api/v1/catalog/units/{unit_id}
+```
 
-Chưa công bố business endpoint cho:
+### Thuốc
 
-- Nhóm hàng / ĐVT.
-- Hàng hóa.
-- Nhà cung cấp.
-- Phiếu nhập / tồn đầu kỳ.
-- Phiếu xuất.
-- Tồn kho / thẻ kho.
-- Cảnh báo.
-- Báo cáo / Excel / PDF.
-- AI nghiệp vụ.
+```text
+GET    /api/v1/catalog/medicines
+GET    /api/v1/catalog/medicines/{medicine_id}
+POST   /api/v1/catalog/medicines
+PUT    /api/v1/catalog/medicines/{medicine_id}
+DELETE /api/v1/catalog/medicines/{medicine_id}
+```
 
-Các endpoint này chỉ được bổ sung sau khi schema, Business Rule và permission tương ứng có nguồn phê duyệt.
+`GET /medicines` hỗ trợ các filter hiện có:
+
+```text
+q
+ group_id
+ unit_id
+```
+
+Các rule đã implement:
+
+- mã thuốc không được trùng;
+- group/unit phải tồn tại;
+- group/unit đang được thuốc sử dụng không thể xóa;
+- `PHARMACIST` và `CUSTOMER` không có quyền UC002 ở baseline hiện tại.
+
+## Chưa công bố API nghiệp vụ
+
+Chưa coi là hoàn tất đối với:
+
+- UC003 — Quản lý lô nhập;
+- UC004 — Bán thuốc và lập hóa đơn;
+- UC005 — Quản lý nhà cung cấp;
+- UC006 — Quản lý và kiểm tra tồn kho;
+- UC007 — Tra cứu thuốc;
+- UC008 — Cảnh báo thuốc sắp hết hạn;
+- UC009 — Thống kê và báo cáo;
+- UC010–UC013 — AI.
+
+Các endpoint tiếp theo chỉ được thêm khi rule/actor/permission liên quan đủ rõ theo decision gate.
