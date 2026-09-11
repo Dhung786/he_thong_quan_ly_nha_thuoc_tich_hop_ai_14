@@ -7,6 +7,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.auth import router as auth_router
 from app.api.catalog import router as catalog_router
+from app.api.manager_ai import router as manager_ai_router
 from app.api.manager_operations import router as manager_operations_router
 from app.api.medicine_lookup import router as medicine_lookup_router
 from app.core.config import settings
@@ -15,17 +16,18 @@ from app.core.errors import ApplicationConflict
 from app.core.logging import configure_logging, get_logger
 from app.core.middleware import CorrelationIdMiddleware
 from app.schemas.common import HealthResponse, ServiceStatusResponse
+from app.services.ai_provider import provider_is_configured
 
 configure_logging()
 application_logger = get_logger("application")
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.4.0",
+    version="0.5.0",
     description=(
         "API for the Group 14 pharmacy management system with AI integration. "
-        "Manager operational APIs now cover suppliers, batches, inventory, expiry, invoices, reports, account administration and advanced medicine lookup. "
-        "AI remains optional and is reported separately by the health endpoint."
+        "Manager APIs cover suppliers, batches, inventory, expiry, invoices, reports, "
+        "account administration, medicine lookup and guarded AI assistance."
     ),
 )
 app.add_middleware(CorrelationIdMiddleware)
@@ -40,6 +42,7 @@ app.include_router(auth_router)
 app.include_router(catalog_router)
 app.include_router(medicine_lookup_router)
 app.include_router(manager_operations_router)
+app.include_router(manager_ai_router)
 
 
 def _correlation_id(request: Request) -> str:
@@ -53,6 +56,8 @@ def _http_error_public_values(status_code: int) -> tuple[str, str]:
         403: ("forbidden", "Insufficient permissions"),
         404: ("not_found", "Resource not found"),
         405: ("method_not_allowed", "Method not allowed"),
+        502: ("bad_gateway", "AI provider request failed"),
+        503: ("service_unavailable", "Requested service is not configured or unavailable"),
     }
     return values.get(status_code, ("http_error", "Request failed"))
 
@@ -227,6 +232,6 @@ async def health() -> JSONResponse:
             "core": "ok",
             "database": database_status,
             "migration": migration_status,
-            "ai": "not_configured" if settings.ai_provider == "disabled" else "configured",
+            "ai": "configured" if provider_is_configured() else "not_configured",
         },
     )

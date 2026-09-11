@@ -2,8 +2,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { RequireAuth } from "./auth/RequireAuth";
 import { LoginPage } from "./pages/LoginPage";
+import { ManagerAIWorkspacePage } from "./pages/ManagerAIWorkspacePage";
 import {
-  ManagerAiPage,
   ManagerExpiryPage,
   ManagerImportsPage,
   ManagerInventoryPage,
@@ -41,7 +41,7 @@ export default function App() {
         <Route path="/manager/expiry" element={<ManagerExpiryPage />} />
         <Route path="/manager/lookup" element={<ManagerLookupPage />} />
         <Route path="/manager/reports" element={<ManagerReportsPage />} />
-        <Route path="/manager/ai" element={<ManagerAiPage />} />
+        <Route path="/manager/ai" element={<ManagerAIWorkspacePage />} />
         <Route path="/manager/users" element={<ManagerUsersPage />} />
       </Route>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
