@@ -107,8 +107,13 @@ async def test_login_rejects_wrong_password() -> None:
             "/api/v1/auth/login",
             json={"username": "definitely-missing", "password": "wrong-password"},
         )
-        assert response.status_code == 401
-        assert response.json()["detail"] == "Invalid or expired authentication"
+
+    assert response.status_code == 401
+    body = response.json()
+    assert body["error"] == "unauthorized"
+    assert body["message"] == "Invalid or expired authentication"
+    assert body["correlation_id"] == response.headers["X-Correlation-ID"]
+    assert response.headers["WWW-Authenticate"] == "Bearer"
 
 
 @pytest.mark.asyncio
@@ -116,5 +121,10 @@ async def test_me_requires_authentication() -> None:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/api/v1/auth/me")
-        assert response.status_code == 401
-        assert response.json()["detail"] == "Invalid or expired authentication"
+
+    assert response.status_code == 401
+    body = response.json()
+    assert body["error"] == "unauthorized"
+    assert body["message"] == "Invalid or expired authentication"
+    assert body["correlation_id"] == response.headers["X-Correlation-ID"]
+    assert response.headers["WWW-Authenticate"] == "Bearer"
