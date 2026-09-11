@@ -10,6 +10,7 @@ export interface LoginCredentials {
 export interface AuthContextValue {
   status: "loading" | "authenticated" | "unauthenticated";
   user: CurrentUser | null;
+  accessToken: string | null;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
 }
