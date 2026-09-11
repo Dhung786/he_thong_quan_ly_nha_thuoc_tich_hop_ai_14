@@ -1,10 +1,15 @@
 from datetime import date, datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.auth import User
+    from app.models.catalog import Medicine
 
 
 class Supplier(Base):
@@ -38,7 +43,7 @@ class MedicineBatch(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     supplier: Mapped[Supplier] = relationship(back_populates="batches")
-    medicine = relationship("Medicine")
+    medicine: Mapped["Medicine"] = relationship()
     invoice_items: Mapped[list["InvoiceItem"]] = relationship(back_populates="batch")
 
 
@@ -55,7 +60,7 @@ class Invoice(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     items: Mapped[list["InvoiceItem"]] = relationship(back_populates="invoice", cascade="all, delete-orphan")
-    created_by = relationship("User")
+    created_by: Mapped["User"] = relationship()
 
 
 class InvoiceItem(Base):
@@ -71,4 +76,4 @@ class InvoiceItem(Base):
 
     invoice: Mapped[Invoice] = relationship(back_populates="items")
     batch: Mapped[MedicineBatch] = relationship(back_populates="invoice_items")
-    medicine = relationship("Medicine")
+    medicine: Mapped["Medicine"] = relationship()
