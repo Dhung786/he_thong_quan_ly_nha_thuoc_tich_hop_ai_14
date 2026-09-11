@@ -12,6 +12,7 @@ from app.services.idempotency import (
     claim,
     complete,
     hash_payload,
+    idempotent_command,
 )
 
 
@@ -154,3 +155,57 @@ async def test_failed_command_rolls_back_idempotency_claim_for_retry() -> None:
             )
             assert retry.is_replay is False
             complete(retry.record)
+
+
+@pytest.mark.asyncio
+async def test_idempotent_command_completes_and_replays_automatically() -> None:
+    scope = f"test.context.{uuid4()}"
+    key = str(uuid4())
+    request_hash = hash_payload(b"context-input")
+
+    async with SessionLocal() as session:
+        async with idempotent_command(
+            session,
+            scope=scope,
+            key=key,
+            request_hash=request_hash,
+        ) as first:
+            assert first.is_replay is False
+            assert first.record.status == "IN_PROGRESS"
+
+    async with SessionLocal() as session:
+        async with idempotent_command(
+            session,
+            scope=scope,
+            key=key,
+            request_hash=request_hash,
+        ) as replay:
+            assert replay.is_replay is True
+            assert replay.record.status == "COMPLETED"
+
+
+@pytest.mark.asyncio
+async def test_idempotent_command_rolls_back_claim_when_caller_fails() -> None:
+    scope = f"test.context-failure.{uuid4()}"
+    key = str(uuid4())
+    request_hash = hash_payload(b"context-failure-input")
+
+    async with SessionLocal() as session:
+        with pytest.raises(RuntimeError, match="caller failure"):
+            async with idempotent_command(
+                session,
+                scope=scope,
+                key=key,
+                request_hash=request_hash,
+            ) as first:
+                assert first.is_replay is False
+                raise RuntimeError("caller failure")
+
+    async with SessionLocal() as session:
+        result = await session.execute(
+            select(IdempotencyRecord).where(
+                IdempotencyRecord.scope == scope,
+                IdempotencyRecord.idempotency_key == key,
+            )
+        )
+        assert result.scalar_one_or_none() is None
