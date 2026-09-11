@@ -1,211 +1,84 @@
-# Hệ thống Quản lý Kho tích hợp AI — Đề tài 14
+# Hệ thống quản lý nhà thuốc có tích hợp AI — Nhóm 14
 
-Repository triển khai theo **MASTER PROMPT V2.0** với PostgreSQL là source of truth và nguyên tắc không tự suy diễn business rule/permission còn thiếu.
+Repository này triển khai theo **Đặc tả yêu cầu ứng dụng V1.0 — Hệ thống quản lý nhà thuốc có tích hợp AI, Nhóm 14**. Baseline kho cũ đã được thay thế trên branch `phase-pharmacy-srs-baseline`.
 
 ## Trạng thái hiện tại
 
-- Phase 0 audit: **PARTIAL** — Master Prompt và repository đã audit; baseline Phase 1 chính thức vẫn chưa truy xuất được.
-- Phase 2A foundation: authentication, refresh rotation/revocation, generic RBAC guard, migration, seed, common error handling, structured logging/correlation ID đã có execution evidence.
-- Phase 2B technical readiness: transaction boundary, idempotency, PostgreSQL row locking, audit helper, backup/restore, health/migration visibility đã có execution evidence.
-- Frontend: login thật, protected route, dashboard thật, `/me`, `/health`, logout và session refresh foundation.
-- Business modules: **BLOCKED** khi còn thiếu approved Data Dictionary/Use Case/Permission Matrix. Không tự suy diễn quyền theo role hoặc kiểu dữ liệu tồn kho.
+`IMPLEMENTED / NOT YET VERIFIED` cho baseline mới cho tới khi GitHub Actions của branch/PR này chạy xanh.
 
-Trạng thái tổng thể vẫn là **PARTIAL / NOT COMPLETE**.
+Đã triển khai:
 
-## Stack
+- UC001 — Đăng nhập và phân quyền.
+- Ba vai trò nghiệp vụ: Quản lý (`MANAGER`), Dược sĩ (`PHARMACIST`), Thu ngân (`CASHIER`).
+- JWT access token, refresh rotation, logout, audit và correlation ID từ foundation kỹ thuật trước đó.
+- UC002 — Quản lý danh mục thuốc dành cho Quản lý:
+  - thêm/sửa/xóa/tra cứu thuốc;
+  - quản lý nhóm thuốc;
+  - quản lý đơn vị tính;
+  - mã thuốc không được trùng;
+  - nhóm thuốc/đơn vị tính đang được thuốc sử dụng không thể xóa.
+- PostgreSQL + Alembic migration `0004_pharmacy_srs_baseline`.
+- React UI `/catalog` kết nối backend thật.
 
-- Frontend: React + TypeScript + Vite + React Router + TanStack Query + React Hook Form + Zod + Tailwind CSS.
-- Backend: Python 3.12 + FastAPI + Pydantic + SQLAlchemy 2 + Alembic.
-- Database: PostgreSQL 17.
-- DevOps: Docker Compose + GitHub Actions.
+Chưa triển khai: UC003–UC013. Không tự thêm trường nghiệp vụ mà SRS chưa định nghĩa cụ thể.
 
-## Chạy nhanh bằng Docker Compose
+## Quy ước role kỹ thuật
 
-Yêu cầu: Docker Desktop/Docker Engine đang chạy.
+| SRS | Mã kỹ thuật |
+| --- | --- |
+| Quản lý | `MANAGER` |
+| Dược sĩ | `PHARMACIST` |
+| Thu ngân | `CASHIER` |
 
-Tại thư mục repository:
+## Tài khoản demo local
+
+Docker Compose mặc định tạo:
+
+```text
+Quản lý
+username: manager
+password: Manager123!ChangeMe
+
+Dược sĩ
+username: pharmacist
+password: Pharmacist123!ChangeMe
+
+Thu ngân
+username: cashier
+password: Cashier123!ChangeMe
+```
+
+Các giá trị trên chỉ dành cho development và có thể override bằng biến môi trường.
+
+## Chạy local
 
 ```bash
 docker compose up -d --build
 ```
 
-Kiểm tra service:
-
-```bash
-docker compose ps
-```
-
-Các địa chỉ local:
+Sau khi stack healthy:
 
 - Frontend: `http://localhost:5173`
-- Login: `http://localhost:5173/login`
-- Backend health: `http://localhost:8000/health`
-- FastAPI docs: `http://localhost:8000/docs`
+- Swagger: `http://localhost:8000/docs`
+- Health: `http://localhost:8000/health`
 
-### Tài khoản development local
-
-Docker Compose development mặc định seed ba tài khoản demo, tương ứng đúng ba role được Master Prompt quy định:
+## UC002 API
 
 ```text
-ADMIN
-username: admin
-password: Admin123!ChangeMe
-
-WAREHOUSE_KEEPER
-username: keeper
-password: Keeper123!ChangeMe
-
-ACCOUNTANT
-username: accountant
-password: Accountant123!ChangeMe
+GET/POST       /api/v1/catalog/groups
+PUT/DELETE     /api/v1/catalog/groups/{id}
+GET/POST       /api/v1/catalog/units
+PUT/DELETE     /api/v1/catalog/units/{id}
+GET/POST       /api/v1/catalog/medicines
+GET/PUT/DELETE /api/v1/catalog/medicines/{id}
 ```
 
-Đây là **development-only defaults**, không phải production credentials. Có thể override bằng environment variables:
+Các endpoint UC002 yêu cầu role `MANAGER` theo đặc tả UC002.
 
-```text
-SEED_ADMIN_USERNAME / SEED_ADMIN_PASSWORD
-SEED_WAREHOUSE_KEEPER_USERNAME / SEED_WAREHOUSE_KEEPER_PASSWORD
-SEED_ACCOUNTANT_USERNAME / SEED_ACCOUNTANT_PASSWORD
-```
+## Điểm chưa rõ trong chính SRS
 
-Production/shared environment phải dùng secret riêng và không commit `.env`.
+SRS có một số mapping tác nhân chưa thống nhất, ví dụ phần mô tả Thu ngân nói thực hiện bán thuốc/lập hóa đơn nhưng bảng mapping Use Case không gán UC004 cho Thu ngân; UC005 cũng có khác biệt giữa bảng mapping và phần đặc tả chi tiết. Những điểm này được giữ ở trạng thái chưa quyết định, không tự suy diễn quyền cho các Use Case liên quan.
 
-Ba role có thể đăng nhập và backend trả đúng role qua `/api/v1/auth/me`. Mapping quyền nghiệp vụ `ROLE × FR × ACTION × API` vẫn **chưa được tự suy diễn** khi Permission Matrix chính thức còn thiếu.
+## Kiểm thử / CI
 
-## Cấu hình môi trường
-
-`.env.example` mô tả các biến hỗ trợ. Nếu muốn override Compose defaults:
-
-```bash
-cp .env.example .env
-```
-
-Sau đó thay ít nhất `JWT_SECRET` và các credential local theo môi trường của bạn. `.env` đã được ignore và không được commit.
-
-## Authentication API
-
-Các endpoint hiện đang triển khai:
-
-- `POST /api/v1/auth/login`
-- `POST /api/v1/auth/refresh`
-- `POST /api/v1/auth/logout`
-- `GET /api/v1/auth/me`
-- `GET /api/v1/status`
-- `GET /health`
-
-Access token dùng JWT. Refresh token là opaque token; database chỉ lưu token hash. Refresh token cũ bị revoke khi rotation thành công. Logout revoke refresh token được gửi lên; access token đã phát hành vẫn hết hạn theo TTL của JWT.
-
-Chi tiết contract và error model: [`docs/API.md`](docs/API.md).
-
-## Frontend hiện tại
-
-UI đã có:
-
-- `/login` — form login nối backend thật.
-- `/dashboard` — protected route.
-- user/role lấy từ `/api/v1/auth/me`.
-- health cards lấy từ `/health`.
-- logout revoke refresh token và xóa local session.
-- session dùng `sessionStorage`, không lưu token vĩnh viễn trong `localStorage`.
-- business modules hiển thị `CHƯA MỞ` cho tới khi schema/permission được phê duyệt.
-
-Hướng dẫn sử dụng: [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md).
-
-## Roles
-
-Chỉ có ba role được định nghĩa:
-
-```text
-ADMIN
-WAREHOUSE_KEEPER
-ACCOUNTANT
-```
-
-Generic backend RBAC guard đã tồn tại. Mapping quyền nghiệp vụ `ROLE × FR × ACTION × API` chưa được tự tạo khi Permission Matrix chính thức còn thiếu.
-
-## Migration / seed
-
-Compose backend tự chạy trước khi serve:
-
-```bash
-alembic upgrade head
-python -m app.seed
-```
-
-Migration hiện tại:
-
-- `0001_foundation_metadata`
-- `0002_auth_foundation`
-- `0003_idempotency_infrastructure`
-
-Seed hiện tạo ba role bắt buộc và, khi các cặp biến môi trường tương ứng được cấu hình, tạo demo user idempotent cho từng role. Nếu username đã tồn tại nhưng thuộc role khác, seed fail thay vì âm thầm đổi quyền.
-
-Các bảng kỹ thuật phục vụ authentication/audit/idempotency là **Technical Implementation Extension**; domain schema nghiệp vụ chính thức chỉ được bổ sung khi có nguồn đủ mạnh.
-
-## Kiểm thử
-
-Backend:
-
-```bash
-cd backend
-pip install -e ".[dev]"
-ruff check app tests
-mypy app
-alembic upgrade head
-python -m app.seed
-pytest -q
-```
-
-Frontend:
-
-```bash
-cd frontend
-npm install
-npm run lint
-npm run typecheck
-npm run test
-npm run build
-```
-
-CI hiện còn kiểm tra:
-
-- clean Docker Compose startup;
-- backend health + migration revision;
-- authentication/refresh/logout foundation;
-- ba role được seed và authenticate đúng role trong backend tests;
-- PostgreSQL backup → delete probe → restore → verify;
-- frontend serving và standalone Nginx SPA routes.
-
-> `IMPLEMENTED`, `VERIFIED` và `DONE` là ba trạng thái khác nhau. Không gọi toàn hệ thống DONE khi business modules/traceability bắt buộc còn thiếu.
-
-## Backup / restore
-
-Backup:
-
-```bash
-python scripts/backup_db.py --output backups/warehouse_ai.dump
-```
-
-Restore yêu cầu xác nhận rõ:
-
-```bash
-python scripts/restore_db.py backups/warehouse_ai.dump --confirm-restore
-```
-
-Xem runbook chi tiết trong thư mục `docs/`.
-
-## Phạm vi chưa triển khai
-
-Chưa mở API/UI nghiệp vụ cho:
-
-- Nhóm hàng / ĐVT.
-- Hàng hóa.
-- Nhà cung cấp.
-- Nhập kho / tồn đầu kỳ.
-- Xuất kho.
-- Tồn kho / thẻ kho.
-- Cảnh báo.
-- Báo cáo / Excel / PDF.
-- AI nghiệp vụ.
-
-Blocker được theo dõi trong GitHub issue #2: cần baseline Phase 1/Data Dictionary/Use Case/Permission Matrix để triển khai đúng thay vì đoán requirement.
+CI kiểm tra backend lint/typecheck/migration/seed/pytest, frontend lint/typecheck/test/build, backup/restore và clean Docker Compose smoke test. Compose smoke test của baseline mới còn kiểm tra đăng nhập Quản lý và tạo dữ liệu UC002 thật.
