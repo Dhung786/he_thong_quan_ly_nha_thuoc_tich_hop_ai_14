@@ -100,6 +100,48 @@ async def test_login_refresh_rotation_logout_and_me() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("role_name", ["ADMIN", "WAREHOUSE_KEEPER", "ACCOUNTANT"])
+async def test_login_and_me_preserve_each_supported_role(role_name: str) -> None:
+    username = f"role-{role_name.lower()}-{uuid4().hex[:8]}"
+    password = "RoleAuthTest-123!"
+
+    async with SessionLocal() as session:
+        role_result = await session.execute(select(Role).where(Role.name == role_name))
+        role = role_result.scalar_one_or_none()
+        assert role is not None
+        session.add(
+            User(
+                username=username,
+                password_hash=hash_password(password),
+                role_id=role.id,
+                is_active=True,
+            )
+        )
+        await session.commit()
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        login_response = await client.post(
+            "/api/v1/auth/login",
+            json={"username": username, "password": password},
+        )
+        assert login_response.status_code == 200
+
+        access_token = login_response.json()["access_token"]
+        me_response = await client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert me_response.status_code == 200
+        assert me_response.json() == {
+            "id": me_response.json()["id"],
+            "username": username,
+            "role": role_name,
+            "is_active": True,
+        }
+
+
+@pytest.mark.asyncio
 async def test_login_rejects_wrong_password() -> None:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
