@@ -85,3 +85,12 @@ async def test_login_rejects_wrong_password() -> None:
         )
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid or expired authentication"
+
+
+@pytest.mark.asyncio
+async def test_me_requires_authentication() -> None:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/v1/auth/me")
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Invalid or expired authentication"
