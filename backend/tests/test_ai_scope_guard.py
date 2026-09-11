@@ -2,7 +2,9 @@ from app.services.ai_scope_guard import validate_ai_output, validate_internal_ch
 
 
 def test_scope_guard_allows_internal_pharmacy_process_question() -> None:
-    decision = validate_internal_chat_input("Quy trình kiểm kê tồn kho và xử lý lô sắp hết hạn là gì?")
+    decision = validate_internal_chat_input(
+        "Quy trình kiểm kê tồn kho và xử lý lô sắp hết hạn là gì?"
+    )
     assert decision.allowed is True
     assert decision.reason == "allowed"
 
