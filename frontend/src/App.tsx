@@ -1,18 +1,58 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { RequireAuth } from "./auth/RequireAuth";
-import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ManagerFeaturePage } from "./pages/ManagerFeaturePage";
 import { MedicineCatalogPage } from "./pages/MedicineCatalogPage";
+import { PharmacistFeaturePage } from "./pages/PharmacistFeaturePage";
+import { PharmacistMedicineLookupPage } from "./pages/PharmacistMedicineLookupPage";
+import { RoleDashboardPage } from "./pages/RoleDashboardPage";
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route element={<RequireAuth />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/dashboard" element={<RoleDashboardPage />} />
         <Route path="/catalog" element={<MedicineCatalogPage />} />
+
+        <Route path="/pharmacist/medicines" element={<PharmacistMedicineLookupPage />} />
+        <Route
+          path="/pharmacist/sales-support"
+          element={
+            <PharmacistFeaturePage
+              eyebrow="UC004 · Hỗ trợ nghiệp vụ"
+              title="Hỗ trợ bán thuốc"
+              description="Không gian hỗ trợ Dược sĩ trong quá trình bán thuốc. Giao diện chưa tạo hóa đơn hoặc trừ tồn cho tới khi backend UC004 và quy tắc chọn lô được hoàn tất."
+              backendStatus="Chờ UC004"
+            />
+          }
+        />
+        <Route
+          path="/pharmacist/ai"
+          element={
+            <PharmacistFeaturePage
+              eyebrow="UC010 · UC011 · UC013"
+              title="AI Dược sĩ"
+              description="Dược sĩ dùng AI để tham khảo, tóm tắt thông tin thuốc và hỗ trợ đọc báo cáo nghiệp vụ. Nội dung AI không thay thế tư vấn chuyên môn hoặc quyết định của con người."
+              backendStatus="AI provider chưa cấu hình"
+              safetyNote="Scope Guard phải từ chối chẩn đoán, kê đơn và chỉ định điều trị; AI không được tự sửa tồn kho, hóa đơn hoặc dữ liệu nghiệp vụ."
+            />
+          }
+        />
+        <Route
+          path="/pharmacist/process"
+          element={
+            <PharmacistFeaturePage
+              eyebrow="UC012"
+              title="Quy trình nội bộ"
+              description="Khu vực hỏi đáp các quy trình nội bộ dành cho Dược sĩ. Nội dung chỉ được trả lời từ nguồn quy trình nội bộ đã được cung cấp và kiểm soát."
+              backendStatus="Chờ nguồn tài liệu nội bộ + AI adapter"
+              safetyNote="Nếu câu hỏi nằm ngoài dữ liệu nội bộ hoặc yêu cầu chẩn đoán/kê đơn, hệ thống phải từ chối thay vì suy đoán."
+            />
+          }
+        />
+
         <Route
           path="/manager/sales"
           element={
