@@ -7,7 +7,12 @@ from app.api.auth import router as auth_router
 from app.core.config import settings
 from app.core.database import engine
 from app.core.errors import ApplicationConflict
+from app.core.logging import configure_logging, get_logger
 from app.core.middleware import CorrelationIdMiddleware
+
+
+configure_logging()
+application_logger = get_logger("application")
 
 app = FastAPI(title=settings.app_name, version="0.1.0")
 app.add_middleware(CorrelationIdMiddleware)
@@ -27,8 +32,18 @@ async def application_conflict_handler(
     exc: ApplicationConflict,
 ) -> JSONResponse:
     correlation_id = getattr(request.state, "correlation_id", "unavailable")
+    application_logger.warning(
+        "Application conflict",
+        extra={
+            "event": "application_conflict",
+            "correlation_id": correlation_id,
+            "error_code": exc.code,
+            "path": request.url.path,
+        },
+    )
     return JSONResponse(
         status_code=409,
+        headers={"X-Correlation-ID": correlation_id},
         content={
             "error": exc.code,
             "message": exc.public_message,
@@ -40,8 +55,18 @@ async def application_conflict_handler(
 @app.exception_handler(Exception)
 async def unexpected_error_handler(request: Request, exc: Exception) -> JSONResponse:
     correlation_id = getattr(request.state, "correlation_id", "unavailable")
+    application_logger.error(
+        "Unexpected internal error",
+        extra={
+            "event": "unexpected_internal_error",
+            "correlation_id": correlation_id,
+            "path": request.url.path,
+            "error_type": type(exc).__name__,
+        },
+    )
     return JSONResponse(
         status_code=500,
+        headers={"X-Correlation-ID": correlation_id},
         content={
             "error": "internal_error",
             "message": "Unexpected internal error",
@@ -62,9 +87,17 @@ async def health() -> JSONResponse:
     try:
         async with engine.connect() as connection:
             await connection.execute(text("SELECT 1"))
-    except Exception:
+    except Exception as exc:
         database_status = "unavailable"
         status_code = 503
+        application_logger.error(
+            "Database health check failed",
+            extra={
+                "event": "database_health_failed",
+                "component": "database",
+                "error_type": type(exc).__name__,
+            },
+        )
 
     return JSONResponse(
         status_code=status_code,
