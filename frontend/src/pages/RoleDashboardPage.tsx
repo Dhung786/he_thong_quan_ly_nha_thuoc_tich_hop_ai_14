@@ -1,12 +1,12 @@
 import { useAuth } from "../auth/auth-context";
 import { DashboardPage } from "./DashboardPage";
-import { PharmacistDashboardPage } from "./PharmacistDashboardPage";
+import { PharmacistDashboardCleanPage } from "./PharmacistDashboardCleanPage";
 
 export function RoleDashboardPage() {
   const auth = useAuth();
 
   if (auth.user?.role === "PHARMACIST") {
-    return <PharmacistDashboardPage />;
+    return <PharmacistDashboardCleanPage />;
   }
 
   return <DashboardPage />;
