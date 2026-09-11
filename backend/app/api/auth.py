@@ -12,6 +12,7 @@ from app.schemas.auth import (
     RefreshTokenRequest,
     TokenPairResponse,
 )
+from app.schemas.common import ErrorResponse, ValidationErrorResponse
 from app.services.auth_service import AuthenticationError, login, logout, rotate_refresh_token
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
@@ -30,7 +31,14 @@ def _unauthorized() -> HTTPException:
     )
 
 
-@router.post("/login", response_model=TokenPairResponse)
+@router.post(
+    "/login",
+    response_model=TokenPairResponse,
+    responses={
+        401: {"model": ErrorResponse, "description": "Invalid credentials"},
+        422: {"model": ValidationErrorResponse, "description": "Request validation failed"},
+    },
+)
 async def login_endpoint(
     payload: LoginRequest,
     request: Request,
@@ -48,7 +56,14 @@ async def login_endpoint(
     return TokenPairResponse(**tokens.__dict__)
 
 
-@router.post("/refresh", response_model=TokenPairResponse)
+@router.post(
+    "/refresh",
+    response_model=TokenPairResponse,
+    responses={
+        401: {"model": ErrorResponse, "description": "Invalid refresh token"},
+        422: {"model": ValidationErrorResponse, "description": "Request validation failed"},
+    },
+)
 async def refresh_endpoint(
     payload: RefreshTokenRequest,
     request: Request,
@@ -65,7 +80,13 @@ async def refresh_endpoint(
     return TokenPairResponse(**tokens.__dict__)
 
 
-@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+@router.post(
+    "/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        422: {"model": ValidationErrorResponse, "description": "Request validation failed"},
+    },
+)
 async def logout_endpoint(
     payload: RefreshTokenRequest,
     request: Request,
@@ -79,7 +100,13 @@ async def logout_endpoint(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.get("/me", response_model=CurrentUserResponse)
+@router.get(
+    "/me",
+    response_model=CurrentUserResponse,
+    responses={
+        401: {"model": ErrorResponse, "description": "Authentication required"},
+    },
+)
 async def me_endpoint(user: Annotated[User, Depends(get_current_user)]) -> CurrentUserResponse:
     return CurrentUserResponse(
         id=user.id,

@@ -62,3 +62,123 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build
+
+  backup-restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate backup scripts
+        run: python -m py_compile scripts/backup_db.py scripts/restore_db.py
+      - name: Start disposable PostgreSQL
+        run: docker compose up -d --wait postgres
+      - name: Create backup probe
+        run: |
+          docker compose exec -T postgres sh -c \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE TABLE backup_restore_probe (value integer NOT NULL); INSERT INTO backup_restore_probe VALUES (42);"'
+      - name: Create database backup
+        run: python scripts/backup_db.py --output /tmp/warehouse_ai_ci.dump
+      - name: Delete probe after backup
+        run: |
+          docker compose exec -T postgres sh -c \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "DROP TABLE backup_restore_probe;"'
+      - name: Restore database backup
+        run: python scripts/restore_db.py /tmp/warehouse_ai_ci.dump --confirm-restore
+      - name: Verify restored probe
+        run: |
+          value="$(docker compose exec -T postgres sh -c 'psql -At -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT value FROM backup_restore_probe;"')"
+          test "$value" = "42"
+      - name: Tear down disposable PostgreSQL
+        if: always()
+        run: docker compose down -v
+
+  compose-smoke:
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: test
+      JWT_SECRET: CI_COMPOSE_ONLY_NOT_A_REAL_SECRET_CHANGE_ME
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build and start clean Compose stack
+        run: docker compose up -d --build --wait
+      - name: Verify backend health and migration revision
+        run: |
+          python - <<'PY'
+          import json
+          import urllib.request
+
+          with urllib.request.urlopen("http://localhost:8000/health", timeout=10) as response:
+              assert response.status == 200
+              body = json.load(response)
+          assert body["core"] == "ok"
+          assert body["database"] == "ok"
+          assert body["migration"] == "0003_idempotency_infrastructure"
+          PY
+      - name: Verify seeded authentication flow
+        run: |
+          python - <<'PY'
+          import json
+          import urllib.request
+
+          def request(path, *, method="GET", body=None, token=None):
+              headers = {}
+              data = None
+              if body is not None:
+                  headers["Content-Type"] = "application/json"
+                  data = json.dumps(body).encode()
+              if token is not None:
+                  headers["Authorization"] = f"Bearer {token}"
+              req = urllib.request.Request(
+                  f"http://localhost:8000{path}",
+                  data=data,
+                  headers=headers,
+                  method=method,
+              )
+              return urllib.request.urlopen(req, timeout=10)
+
+          with request(
+              "/api/v1/auth/login",
+              method="POST",
+              body={"username": "admin", "password": "Admin123!ChangeMe"},
+          ) as response:
+              assert response.status == 200
+              tokens = json.load(response)
+
+          with request("/api/v1/auth/me", token=tokens["access_token"]) as response:
+              assert response.status == 200
+              user = json.load(response)
+          assert user["username"] == "admin"
+          assert user["role"] == "ADMIN"
+
+          with request(
+              "/api/v1/auth/logout",
+              method="POST",
+              body={"refresh_token": tokens["refresh_token"]},
+          ) as response:
+              assert response.status == 204
+          PY
+      - name: Verify frontend is serving
+        run: |
+          python - <<'PY'
+          import urllib.request
+
+          with urllib.request.urlopen("http://localhost:5173/", timeout=10) as response:
+              content = response.read()
+              assert response.status == 200
+              assert content
+          PY
+      - name: Verify database migration table
+        run: |
+          revision="$(docker compose exec -T postgres sh -c 'psql -At -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT version_num FROM alembic_version;"')"
+          test "$revision" = "0003_idempotency_infrastructure"
+      - name: Show service logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Tear down clean Compose stack
+        if: always()
+        run: docker compose down -v

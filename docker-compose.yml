@@ -26,6 +26,13 @@ services:
       JWT_SECRET: ${JWT_SECRET:-INSECURE_DEV_ONLY_CHANGE_ME}
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-admin}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-Admin123!ChangeMe}
+      SEED_WAREHOUSE_KEEPER_USERNAME: ${SEED_WAREHOUSE_KEEPER_USERNAME:-keeper}
+      SEED_WAREHOUSE_KEEPER_PASSWORD: ${SEED_WAREHOUSE_KEEPER_PASSWORD:-Keeper123!ChangeMe}
+      SEED_ACCOUNTANT_USERNAME: ${SEED_ACCOUNTANT_USERNAME:-accountant}
+      SEED_ACCOUNTANT_PASSWORD: ${SEED_ACCOUNTANT_PASSWORD:-Accountant123!ChangeMe}
       CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:5173"]}
       AI_PROVIDER: ${AI_PROVIDER:-disabled}
     depends_on:
@@ -44,8 +51,8 @@ services:
   frontend:
     build:
       context: ./frontend
-    environment:
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
     depends_on:
       backend:
         condition: service_healthy

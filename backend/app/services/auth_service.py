@@ -10,14 +10,14 @@ from app.core.security import (
     hash_refresh_token,
     verify_password,
 )
-from app.models.auth import AuditLog, RefreshToken, User
+from app.models.auth import RefreshToken, User
 from app.repositories.auth_repository import (
-    add_audit_log,
     add_refresh_token,
     get_refresh_token_for_update,
     get_user_by_id,
     get_user_by_username,
 )
+from app.services.audit_service import AuditEvent, record_audit_event
 
 
 class AuthenticationError(Exception):
@@ -47,6 +47,25 @@ def _token_response(user: User, raw_refresh_token: str) -> AuthTokens:
     )
 
 
+def _record_auth_event(
+    session: AsyncSession,
+    *,
+    user_id: int,
+    event_type: str,
+    correlation_id: str | None,
+) -> None:
+    record_audit_event(
+        session,
+        AuditEvent(
+            event_type=event_type,
+            entity_type="user",
+            entity_id=str(user_id),
+            actor_user_id=user_id,
+            correlation_id=correlation_id,
+        ),
+    )
+
+
 async def login(
     session: AsyncSession,
     username: str,
@@ -60,14 +79,11 @@ async def login(
     now = datetime.now(UTC)
     raw_refresh_token = generate_refresh_token()
     add_refresh_token(session, _new_refresh_record(user.id, raw_refresh_token, now))
-    add_audit_log(
+    _record_auth_event(
         session,
-        AuditLog(
-            actor_user_id=user.id,
-            event_type="auth.login.success",
-            correlation_id=correlation_id,
-            details={},
-        ),
+        user_id=user.id,
+        event_type="auth.login.success",
+        correlation_id=correlation_id,
     )
     await session.commit()
     return _token_response(user, raw_refresh_token)
@@ -95,14 +111,11 @@ async def rotate_refresh_token(
     token_record.revoked_at = now
     replacement = generate_refresh_token()
     add_refresh_token(session, _new_refresh_record(user.id, replacement, now))
-    add_audit_log(
+    _record_auth_event(
         session,
-        AuditLog(
-            actor_user_id=user.id,
-            event_type="auth.refresh.rotated",
-            correlation_id=correlation_id,
-            details={},
-        ),
+        user_id=user.id,
+        event_type="auth.refresh.rotated",
+        correlation_id=correlation_id,
     )
     await session.commit()
     return _token_response(user, replacement)
@@ -120,13 +133,10 @@ async def logout(
         return
 
     token_record.revoked_at = datetime.now(UTC)
-    add_audit_log(
+    _record_auth_event(
         session,
-        AuditLog(
-            actor_user_id=token_record.user_id,
-            event_type="auth.logout",
-            correlation_id=correlation_id,
-            details={},
-        ),
+        user_id=token_record.user_id,
+        event_type="auth.logout",
+        correlation_id=correlation_id,
     )
     await session.commit()
