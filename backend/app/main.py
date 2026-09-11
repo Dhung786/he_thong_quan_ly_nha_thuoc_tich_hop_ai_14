@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.api.admin import router as admin_router
 from app.api.auth import router as auth_router
 from app.api.catalog import router as catalog_router
 from app.core.config import settings
@@ -19,11 +20,11 @@ application_logger = get_logger("application")
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.2.0",
+    version="0.3.0",
     description=(
         "API for the Group 14 pharmacy management system with AI integration. "
-        "The approved SRS is the functional baseline; UC002 medicine catalog is the first "
-        "business module implemented on top of the verified authentication foundation."
+        "The approved SRS is the functional baseline; UC002 medicine catalog is implemented, "
+        "and manager-only system administration is tracked as a user-approved scope addition."
     ),
 )
 app.add_middleware(CorrelationIdMiddleware)
@@ -36,6 +37,7 @@ app.add_middleware(
 )
 app.include_router(auth_router)
 app.include_router(catalog_router)
+app.include_router(admin_router)
 
 
 def _correlation_id(request: Request) -> str:
