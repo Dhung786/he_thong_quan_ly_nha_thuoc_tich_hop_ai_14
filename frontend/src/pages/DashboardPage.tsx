@@ -142,17 +142,26 @@ export function DashboardPage() {
   );
 }
 
+function formatStatusValue(value: string): string {
+  if (value === "not_configured") return "Chưa cấu hình";
+  if (value === "checking") return "Đang kiểm tra";
+  if (value === "unavailable") return "Không khả dụng";
+  return value.replaceAll("_", " ");
+}
+
 function StatusCard({ label, value }: { label: string; value: string }) {
   const healthy = value === "ok" || value.startsWith("000");
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+    <div className="min-w-0 rounded-2xl border border-slate-800 bg-slate-900 p-5">
       <p className="text-xs uppercase tracking-wider text-slate-500">{label}</p>
-      <div className="mt-3 flex items-center gap-2">
+      <div className="mt-3 flex min-w-0 items-start gap-2">
         <span
-          className={`h-2.5 w-2.5 rounded-full ${healthy ? "bg-emerald-400" : "bg-amber-400"}`}
+          className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${healthy ? "bg-emerald-400" : "bg-amber-400"}`}
         />
-        <p className="break-all font-semibold text-slate-200">{value}</p>
+        <p className="min-w-0 break-words text-sm font-semibold leading-6 text-slate-200" title={value}>
+          {formatStatusValue(value)}
+        </p>
       </div>
     </div>
   );
