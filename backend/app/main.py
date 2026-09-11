@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
@@ -25,12 +26,53 @@ app.add_middleware(
 app.include_router(auth_router)
 
 
+def _correlation_id(request: Request) -> str:
+    value = getattr(request.state, "correlation_id", "unavailable")
+    return value if isinstance(value, str) else "unavailable"
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_error_handler(
+    request: Request,
+    exc: RequestValidationError,
+) -> JSONResponse:
+    correlation_id = _correlation_id(request)
+    safe_errors = [
+        {
+            "location": [str(part) for part in error.get("loc", ())],
+            "type": str(error.get("type", "validation_error")),
+        }
+        for error in exc.errors()
+    ]
+
+    application_logger.warning(
+        "Request validation failed",
+        extra={
+            "event": "request_validation_failed",
+            "correlation_id": correlation_id,
+            "path": request.url.path,
+            "error_type": type(exc).__name__,
+        },
+    )
+
+    return JSONResponse(
+        status_code=422,
+        headers={"X-Correlation-ID": correlation_id},
+        content={
+            "error": "validation_error",
+            "message": "Request validation failed",
+            "correlation_id": correlation_id,
+            "details": safe_errors,
+        },
+    )
+
+
 @app.exception_handler(ApplicationConflict)
 async def application_conflict_handler(
     request: Request,
     exc: ApplicationConflict,
 ) -> JSONResponse:
-    correlation_id = getattr(request.state, "correlation_id", "unavailable")
+    correlation_id = _correlation_id(request)
     application_logger.warning(
         "Application conflict",
         extra={
@@ -53,7 +95,7 @@ async def application_conflict_handler(
 
 @app.exception_handler(Exception)
 async def unexpected_error_handler(request: Request, exc: Exception) -> JSONResponse:
-    correlation_id = getattr(request.state, "correlation_id", "unavailable")
+    correlation_id = _correlation_id(request)
     application_logger.error(
         "Unexpected internal error",
         extra={
