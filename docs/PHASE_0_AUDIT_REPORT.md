@@ -1,99 +1,153 @@
-# PHASE 0 AUDIT REPORT
+# PHASE 0 AUDIT REPORT — Pharmacy AI V3 baseline
 
 ## Status
 
-**PARTIAL / BLOCKED (business-detail dependent items only)**
+**AUDIT COMPLETE / BUSINESS DECISIONS PARTIALLY PENDING**
 
-## Sources actually available
+Phase 0 has been rerun against the pharmacy SRS baseline and the current repository. The old warehouse baseline is no longer the business source of truth.
 
-1. MASTER PROMPT V2.0 supplied by the user.
-2. Newly created GitHub repository.
+## Source-of-truth order
 
-The repository initially contained only `README.md`; therefore no existing application implementation could be trusted or reused.
+1. Latest explicit user-approved decisions.
+2. SRS V1.0 — Hệ thống quản lý nhà thuốc có tích hợp AI, Nhóm 14.
+3. Confirmed supplementary requirements/business rules.
+4. Technical design.
+5. Current source code.
 
-## Missing source-of-truth documents
+## Level 0 actor decision
 
-- `Phase1_QuanLyKho_AI_HoanThien.docx`.
-- SRS / Requirement Specification.
-- Use Case specification.
-- ERD / Data Dictionary.
-- Business Rules / State Machine beyond what is explicitly reproduced in Master Prompt V2.0.
-- Test Specification defining exact TC-01 → TC-24 inputs and expected outputs.
-- Stitch UI files.
+The user explicitly replaced **Thu ngân** with **Khách hàng**.
 
-These missing sources block any decision where guessing could change business behavior, permission, field semantics, quantity type, or test expectation.
+Current roles:
+
+```text
+MANAGER
+PHARMACIST
+CUSTOMER
+```
+
+`CUSTOMER` does not inherit former cashier permissions by assumption. Only permissions explicitly supported by approved decisions are enabled.
 
 ## Requirement inventory
 
-| FR | Scope from Master Prompt | Audit status |
+| UC | Scope | Current status |
 |---|---|---|
-| FR-01 | Login and authorization | PARTIAL — roles known; detailed permission matrix missing |
-| FR-02 | Item/group/UOM/minimum stock | PARTIAL — scope known; exact data dictionary missing |
-| FR-03 | Supplier management | PARTIAL — scope known; exact data dictionary missing |
-| FR-04 | Receipt and stock update | PARTIAL — transaction/state rules available; exact fields missing |
-| FR-05 | Issue and stock validation | PARTIAL — transaction/lock rules available; exact fields missing |
-| FR-06 | History and stock card | PARTIAL — report behavior known; exact API/UI contract missing |
-| FR-07 | Low-stock alert | PARTIAL — threshold behavior known |
-| FR-08 | N-X-T report + Excel/PDF | PARTIAL — formula known; permission/price visibility detail missing |
-| FR-09 | AI monthly report | PARTIAL — architecture/validation rules known |
-| FR-10 | Reorder explanation | BLOCKED on ambiguity of “Số ngày có dữ liệu” |
-| FR-11 | Anomaly explanation | PARTIAL — baseline thresholds known |
-
-## Permission matrix
-
-Roles are confirmed: `ADMIN`, `WAREHOUSE_KEEPER`, `ACCOUNTANT`.
-
-Detailed `ROLE × FR × ACTION × API` permissions are **BLOCKED (STOP-02)** because Master Prompt explicitly forbids guessing permissions not fixed by Phase 1.
+| UC001 | Đăng nhập và phân quyền | IMPLEMENTED; role migration to CUSTOMER added |
+| UC002 | Quản lý danh mục thuốc | IMPLEMENTED for MANAGER |
+| UC003 | Quản lý lô nhập | NOT STARTED |
+| UC004 | Bán thuốc và lập hóa đơn | BLOCKED on actor + batch allocation rule |
+| UC005 | Quản lý nhà cung cấp | NOT STARTED; actor mapping requires confirmation |
+| UC006 | Quản lý và kiểm tra tồn kho | NOT STARTED |
+| UC007 | Tra cứu thuốc | NOT STARTED |
+| UC008 | Cảnh báo thuốc sắp hết hạn | BLOCKED on expiry warning threshold |
+| UC009 | Thống kê và báo cáo | NOT STARTED |
+| UC010 | AI tóm tắt thông tin thuốc | NOT STARTED |
+| UC011 | AI báo cáo thuốc sắp hết hạn | NOT STARTED |
+| UC012 | Chatbot hỏi đáp quy trình nội bộ | NOT STARTED |
+| UC013 | Kiểm soát phạm vi phản hồi AI | NOT STARTED |
 
 ## Repository inventory
 
-Initial state:
+Reusable technical foundation:
 
-- README only.
-- No frontend.
-- No backend.
-- No migration.
-- No database configuration.
-- No tests.
-- No CI.
+- React + TypeScript + Vite frontend;
+- FastAPI backend;
+- PostgreSQL + SQLAlchemy 2 async;
+- Alembic migrations;
+- JWT access token + rotating opaque refresh token;
+- backend RBAC guard;
+- audit log + correlation ID;
+- error envelopes;
+- transaction/idempotency/locking helpers;
+- Docker Compose;
+- backup/restore scripts;
+- GitHub Actions CI.
 
-Result: safe to build a new technical foundation; no legacy application code is being rewritten.
+Pharmacy-specific implementation already present:
 
-## Out-of-scope gate
+- migration `0004_pharmacy_srs_baseline`;
+- UC001 pharmacy roles foundation;
+- UC002 medicine groups, units and medicines;
+- `/catalog` frontend connected to real backend.
 
-The implementation must not add multi-warehouse, branch, customer, sales/order/payment/debt/shipping, lot/batch/serial/expiry, standalone stocktake, financial accounting, or AI mutation of official stock/documents unless explicitly approved later.
+Current role-change branch adds migration `0005_customer_role` without editing applied migration history.
 
-## Technical Implementation Decisions
+## Database gap
 
-### TID-001 — Repository structure
+Current domain tables cover only medicine catalog plus technical/auth tables.
 
-**Decision:** use `frontend/`, `backend/`, `docs/`, root Compose/CI files.
+Still required for later UC implementation, subject to detailed rule confirmation:
 
-**Reason:** matches the target architecture without adding business behavior.
+- suppliers;
+- medicine batches/lots;
+- invoice / invoice items;
+- inventory projection or equivalent source-of-truth model;
+- expiry alert support;
+- AI logs / validated AI outputs;
+- internal process knowledge source for chatbot.
 
-### TID-002 — Async PostgreSQL access
+Money fields must use Decimal/NUMERIC rather than float.
 
-**Decision:** SQLAlchemy 2 async engine with `asyncpg`.
+## Backend gap
 
-**Reason:** technical choice only; preserves PostgreSQL as source of truth and supports transaction/row-lock work later.
+UC003–UC013 are not complete. Catalog code is functional but can later be refactored toward API → Application Service → Repository → PostgreSQL without changing behavior.
 
-### TID-003 — Foundation migration
+## Frontend gap
 
-**Decision:** first migration creates only `system_metadata`, a technical extension.
+Currently available:
 
-**Reason:** validates Alembic-from-empty-DB flow without inventing domain columns before Data Dictionary audit.
+```text
+/login
+/dashboard
+/catalog
+```
 
-### TID-004 — Correlation IDs
+Future screens depend on approved contracts for UC003–UC013.
 
-**Decision:** middleware accepts a valid incoming `X-Correlation-ID` or generates UUID4 and echoes it in the response.
+## AI gap
 
-**Reason:** supports observability and safe error tracing.
+AI provider is optional/not configured in the current verified foundation. Before UC010–UC013 can be reported complete, implementation still needs:
 
-## Proposed sequence
+- AI adapter;
+- scope guard;
+- validated structured outputs;
+- fallback behavior;
+- bounded retries;
+- prompt-injection defense;
+- AI audit/logging;
+- internal-process retrieval for chatbot.
 
-1. Complete Phase 2A technical foundation and CI.
-2. Obtain/audit Phase 1 baseline + SRS + UC + Data Dictionary + TC-01..TC-24.
-3. Finalize permission matrix and domain schema.
-4. Implement Phase 2B transaction modules.
-5. Require concurrency evidence before Phase 2C.
-6. Implement reporting, then AI, then hardening/delivery.
+AI must never directly mutate official stock, invoices, users or business records.
+
+## Requirement conflicts / decision gates
+
+The following are intentionally not inferred:
+
+1. UC004 actor under the new role model.
+2. Batch allocation when selling: FEFO, FIFO or manual selection.
+3. Expiry-warning lead time.
+4. UC005 permissions under `MANAGER / PHARMACIST / CUSTOMER`.
+5. Any CUSTOMER permission beyond UC001 unless explicitly approved.
+
+Only the affected module is blocked by each ambiguity.
+
+## Out-of-scope / superseded material
+
+The old warehouse business baseline (`ADMIN / WAREHOUSE_KEEPER / ACCOUNTANT`, generic item receipt/issue warehouse flows) is superseded as a business source. Technical infrastructure may be reused where it does not change pharmacy requirements.
+
+## Implementation sequence
+
+1. Finalize customer-role migration and regression tests.
+2. Keep UC001 + UC002 verified.
+3. Implement UC005 or other independent clear module after permission confirmation.
+4. Implement UC003 batches with transaction/inventory integrity.
+5. Implement UC006/UC007.
+6. Implement UC008 after expiry threshold is approved.
+7. Implement UC009.
+8. Implement UC004 only after actor + batch allocation rules are approved.
+9. Implement UC013 AI scope guard, then UC010–UC012.
+10. Run security, concurrency, clean-compose and end-to-end evidence gates.
+
+## Current verification rule
+
+No change is called VERIFIED merely because code exists. Verification requires actual CI/runtime evidence on the relevant commit.
