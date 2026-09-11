@@ -6,6 +6,7 @@ from sqlalchemy import text
 from app.api.auth import router as auth_router
 from app.core.config import settings
 from app.core.database import engine
+from app.core.errors import ApplicationConflict
 from app.core.middleware import CorrelationIdMiddleware
 
 app = FastAPI(title=settings.app_name, version="0.1.0")
@@ -18,6 +19,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(auth_router)
+
+
+@app.exception_handler(ApplicationConflict)
+async def application_conflict_handler(
+    request: Request,
+    exc: ApplicationConflict,
+) -> JSONResponse:
+    correlation_id = getattr(request.state, "correlation_id", "unavailable")
+    return JSONResponse(
+        status_code=409,
+        content={
+            "error": exc.code,
+            "message": exc.public_message,
+            "correlation_id": correlation_id,
+        },
+    )
 
 
 @app.exception_handler(Exception)
