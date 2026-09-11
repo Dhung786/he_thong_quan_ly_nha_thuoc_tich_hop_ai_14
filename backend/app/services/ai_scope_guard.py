@@ -85,8 +85,9 @@ def safe_scope_rejection(reason: str) -> str:
             "hoặc dữ liệu nghiệp vụ."
         ),
         "outside_pharmacy_internal_scope": (
-            "Chatbot này chỉ trả lời các câu hỏi về thuốc, tồn kho, lô nhập, hạn sử dụng, bán thuốc, "
-            "hóa đơn, báo cáo và quy trình nội bộ của hệ thống nhà thuốc."
+            "Chatbot này chỉ trả lời các câu hỏi về thuốc, tồn kho, lô nhập, "
+            "hạn sử dụng, bán thuốc, hóa đơn, báo cáo và quy trình nội bộ "
+            "của hệ thống nhà thuốc."
         ),
         "unsafe_or_operational_output": (
             "Phản hồi AI đã bị Scope Guard chặn vì có nội dung vượt phạm vi an toàn."
