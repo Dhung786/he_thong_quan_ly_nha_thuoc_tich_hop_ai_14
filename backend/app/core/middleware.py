@@ -6,7 +6,6 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 
 from app.core.logging import bind_correlation_id, get_logger, reset_correlation_id
 
-
 request_logger = get_logger("request")
 
 
