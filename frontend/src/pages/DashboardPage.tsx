@@ -3,9 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../auth/auth-context";
 import { ManagerSidebar } from "../components/ManagerSidebar";
-import { RoleUseCasePanel } from "../components/RoleUseCasePanel";
 import { healthRequest, medicinesRequest } from "../lib/api";
-import { managerUseCases } from "../lib/role-use-cases";
 
 const roleLabels: Record<string, string> = {
   MANAGER: "Quản lý",
@@ -66,47 +64,39 @@ export function DashboardPage() {
 
         <main className="p-5 sm:p-8 lg:p-10">
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard label="Doanh thu" value="—" note="Chờ UC004 + UC009" accent="emerald" />
-            <MetricCard label="Tổng số thuốc" value={totalMedicines} note="Dữ liệu thật từ UC002" />
-            <MetricCard label="Thuốc tồn thấp" value="—" note="Chờ UC006" accent="amber" />
-            <MetricCard label="Thuốc sắp hết hạn" value="—" note="Chờ UC008" accent="rose" />
+            <MetricCard label="Doanh thu" value="—" note="Chưa có dữ liệu bán hàng" accent="emerald" />
+            <MetricCard label="Tổng số thuốc" value={totalMedicines} note="Dữ liệu thật từ danh mục thuốc" />
+            <MetricCard label="Thuốc tồn thấp" value="—" note="Chưa có dữ liệu tồn kho" accent="amber" />
+            <MetricCard label="Thuốc sắp hết hạn" value="—" note="Chưa có dữ liệu hạn sử dụng" accent="rose" />
           </section>
 
-          <div className="mt-7">
-            <RoleUseCasePanel
-              title="Use Case dành cho Quản lý"
-              subtitle="Các Use Case được gắn trực tiếp vào giao diện Quản lý theo SRS v1.0. UC005 được hiển thị theo đặc tả chi tiết của UC005, trong đó Quản lý là một tác nhân."
-              useCases={managerUseCases}
-            />
-          </div>
-
           <section className="mt-7 grid gap-5 xl:grid-cols-2">
-            <FeaturePanel title="2. Quản lý thuốc" icon="💊" to="/catalog" status="UC002 đang hoạt động">
-              Danh sách thuốc, nhóm thuốc và đơn vị tính. Đây là module đã kết nối PostgreSQL thật.
+            <FeaturePanel title="2. Quản lý thuốc" icon="💊" to="/catalog" status="Đã có dữ liệu thật">
+              Danh sách thuốc, nhóm thuốc và đơn vị tính được lưu trong PostgreSQL.
             </FeaturePanel>
-            <FeaturePanel title="3. Quản lý nhập thuốc" icon="📥" to="/manager/imports" status="Chờ UC003/UC005">
-              Danh sách lô nhập, thêm lô nhập và nhà cung cấp.
+            <FeaturePanel title="3. Quản lý nhập thuốc" icon="📥" to="/manager/imports" status="Đang chờ API">
+              Quản lý lô nhập, hạn sử dụng, số lượng, giá nhập, giá bán và nhà cung cấp.
             </FeaturePanel>
-            <FeaturePanel title="4. Bán thuốc" icon="🧾" to="/manager/sales" status="Chờ UC004">
-              Giao diện bán thuốc và hóa đơn. Chưa ghi giao dịch thật khi quy tắc chọn lô chưa được chốt.
+            <FeaturePanel title="4. Bán thuốc" icon="🧾" to="/manager/sales" status="Đang chờ API">
+              Tìm thuốc, kiểm tra tồn, nhập số lượng, tính tiền và tạo hóa đơn.
             </FeaturePanel>
-            <FeaturePanel title="5. Tồn kho" icon="📦" to="/manager/inventory" status="Chờ UC006">
-              Danh sách tồn kho và cảnh báo tồn thấp.
+            <FeaturePanel title="5. Tồn kho" icon="📦" to="/manager/inventory" status="Đang chờ API">
+              Theo dõi tồn theo thuốc hoặc lô và cảnh báo khi thấp hơn ngưỡng.
             </FeaturePanel>
-            <FeaturePanel title="6. Hạn sử dụng" icon="⏳" to="/manager/expiry" status="Chờ UC008">
-              Theo dõi thuốc sắp hết hạn và thuốc đã hết hạn.
+            <FeaturePanel title="6. Hạn sử dụng" icon="⏳" to="/manager/expiry" status="Đang chờ API">
+              Theo dõi thuốc sắp hết hạn và thuốc đã hết hạn theo từng lô.
             </FeaturePanel>
-            <FeaturePanel title="7. Tra cứu thuốc" icon="🔎" to="/manager/lookup" status="Có dữ liệu UC002">
-              Tìm kiếm nhanh theo mã hoặc tên thuốc từ dữ liệu thật.
+            <FeaturePanel title="7. Tra cứu thuốc" icon="🔎" to="/manager/lookup" status="Đang hoàn thiện">
+              Tra cứu theo tên, mã, nhóm, lô hoặc hạn sử dụng.
             </FeaturePanel>
-            <FeaturePanel title="8. Báo cáo - Thống kê" icon="📈" to="/manager/reports" status="Chờ UC009/UC011">
-              Doanh thu, tồn kho và thuốc sắp hết hạn.
+            <FeaturePanel title="8. Báo cáo - Thống kê" icon="📈" to="/manager/reports" status="Đang chờ API">
+              Báo cáo doanh thu, tồn kho và thuốc sắp hết hạn theo khoảng thời gian.
             </FeaturePanel>
-            <FeaturePanel title="9. Trợ lý AI" icon="🤖" to="/manager/ai" status={aiConfigured ? "AI provider đã cấu hình" : "AI provider chưa cấu hình"}>
-              AI tóm tắt thông tin thuốc, AI báo cáo thuốc sắp hết hạn và chatbot quy trình nội bộ.
+            <FeaturePanel title="9. Trợ lý AI" icon="🤖" to="/manager/ai" status={aiConfigured ? "AI đã cấu hình" : "AI chưa cấu hình"}>
+              Tóm tắt thông tin thuốc, hỗ trợ báo cáo hạn dùng và hỏi đáp quy trình nội bộ.
             </FeaturePanel>
-            <FeaturePanel title="10. Tài khoản / Phân quyền" icon="👥" to="/manager/users" status="Chờ API quản trị">
-              Quản lý tài khoản Quản lý, Dược sĩ và Khách hàng; khóa/mở tài khoản và phân quyền khi backend sẵn sàng.
+            <FeaturePanel title="10. Tài khoản / Phân quyền" icon="👥" to="/manager/users" status="Đang chờ API">
+              Quản lý tài khoản, vai trò, trạng thái tài khoản và đặt lại mật khẩu.
             </FeaturePanel>
           </section>
 
