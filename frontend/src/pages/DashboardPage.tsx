@@ -32,6 +32,7 @@ export function DashboardPage() {
   });
   const roleLabel = roleLabels[auth.user?.role ?? ""] ?? auth.user?.role ?? "-";
   const canManageCatalog = auth.user?.role === "MANAGER";
+  const canAdministerSystem = auth.user?.role === "MANAGER";
 
   async function handleLogout() {
     await auth.logout();
@@ -73,6 +74,14 @@ export function DashboardPage() {
               <span className="text-[10px] uppercase tracking-wider">Không có quyền</span>
             </div>
           )}
+          {canAdministerSystem ? (
+            <Link
+              to="/admin"
+              className="block rounded-xl border border-cyan-900/60 bg-cyan-950/30 px-4 py-3 text-sm font-medium text-cyan-300 transition hover:bg-cyan-950/60"
+            >
+              Quản trị hệ thống
+            </Link>
+          ) : null}
           {plannedModules.map((module) => (
             <div
               key={module}
@@ -103,8 +112,9 @@ export function DashboardPage() {
             <p className="text-sm text-slate-400">SRS V1.0 · Nhóm 14</p>
             <h2 className="mt-1 text-3xl font-bold">Hệ thống quản lý nhà thuốc có tích hợp AI</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
-              Baseline nghiệp vụ đã chuyển sang SRS nhà thuốc. UC001 xác thực đang hoạt động và
-              UC002 quản lý danh mục thuốc đã được mở cho vai trò Quản lý.
+              Baseline nghiệp vụ đã chuyển sang SRS nhà thuốc. UC001 xác thực và UC002 danh mục
+              thuốc đang hoạt động. Vai trò Quản lý có thêm khu vực quản trị hệ thống theo yêu cầu
+              bổ sung đã được phê duyệt.
             </p>
           </div>
           <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
@@ -137,10 +147,10 @@ export function DashboardPage() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm text-slate-500">Đã triển khai</p>
-                <h3 className="mt-1 text-xl font-semibold">UC001 + UC002</h3>
+                <h3 className="mt-1 text-xl font-semibold">UC001 + UC002 + Quản trị hệ thống</h3>
               </div>
               <span className="rounded-full border border-emerald-800/70 bg-emerald-950/40 px-3 py-1 text-xs font-semibold text-emerald-300">
-                PHARMACY SRS BASELINE
+                PHARMACY BASELINE
               </span>
             </div>
             <div className="mt-6 space-y-3 text-sm text-slate-300">
@@ -148,6 +158,9 @@ export function DashboardPage() {
               <CheckRow text="Ba vai trò: Quản lý, Dược sĩ, Thu ngân" />
               <CheckRow text="UC002: thêm, sửa, xóa, tra cứu thuốc" />
               <CheckRow text="UC002: quản lý nhóm thuốc và đơn vị tính" />
+              {canAdministerSystem ? (
+                <CheckRow text="Yêu cầu bổ sung: tạo/khóa tài khoản, phân vai trò, reset mật khẩu và xem audit log" />
+              ) : null}
             </div>
           </div>
 
@@ -155,9 +168,9 @@ export function DashboardPage() {
             <p className="text-sm text-slate-500">Điểm cần giữ nguyên theo SRS</p>
             <h3 className="mt-1 text-xl font-semibold">Không tự suy diễn yêu cầu</h3>
             <p className="mt-4 text-sm leading-6 text-slate-400">
-              Các trường dữ liệu chưa được SRS định nghĩa cụ thể sẽ chưa được thêm. Những chỗ
-              mapping tác nhân còn mâu thuẫn trong SRS sẽ được đánh dấu để xử lý ở đúng Use Case,
-              thay vì tự chọn quyền.
+              Các trường dữ liệu chưa được SRS định nghĩa cụ thể sẽ chưa được thêm. Phần quản trị
+              tài khoản được đánh dấu rõ là yêu cầu bổ sung sau SRS; các quyền UC003–UC013 vẫn chưa
+              được tự suy diễn.
             </p>
           </div>
         </section>
