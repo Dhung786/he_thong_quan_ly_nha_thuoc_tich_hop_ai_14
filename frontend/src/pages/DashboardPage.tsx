@@ -1,18 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../auth/auth-context";
 import { healthRequest } from "../lib/api";
 
-const futureModules = [
-  "Nhóm hàng & ĐVT",
-  "Hàng hóa",
-  "Nhà cung cấp",
-  "Nhập kho",
-  "Xuất kho",
-  "Tồn kho",
-  "Báo cáo",
-  "AI hỗ trợ",
+const roleLabels: Record<string, string> = {
+  MANAGER: "Quản lý",
+  PHARMACIST: "Dược sĩ",
+  CASHIER: "Thu ngân",
+};
+
+const plannedModules = [
+  "UC003 · Quản lý lô nhập",
+  "UC004 · Bán thuốc và lập hóa đơn",
+  "UC005 · Quản lý nhà cung cấp",
+  "UC006 · Quản lý và kiểm tra tồn kho",
+  "UC007 · Tra cứu thuốc",
+  "UC008 · Cảnh báo thuốc sắp hết hạn",
+  "UC009 · Thống kê và báo cáo",
+  "UC010–UC013 · AI hỗ trợ",
 ];
 
 export function DashboardPage() {
@@ -24,6 +30,8 @@ export function DashboardPage() {
     retry: false,
     refetchInterval: 30_000,
   });
+  const roleLabel = roleLabels[auth.user?.role ?? ""] ?? auth.user?.role ?? "-";
+  const canManageCatalog = auth.user?.role === "MANAGER";
 
   async function handleLogout() {
     await auth.logout();
@@ -31,17 +39,17 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 lg:grid lg:grid-cols-[280px_1fr]">
+    <div className="min-h-screen bg-slate-950 text-slate-100 lg:grid lg:grid-cols-[300px_1fr]">
       <aside className="border-b border-slate-800 bg-slate-900/95 p-5 lg:min-h-screen lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between lg:block">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-400">
-              Warehouse AI
+              Pharmacy AI · Nhóm 14
             </p>
-            <h1 className="mt-2 text-xl font-bold">Quản lý kho</h1>
+            <h1 className="mt-2 text-xl font-bold">Quản lý nhà thuốc</h1>
           </div>
           <span className="rounded-full border border-slate-700 bg-slate-950 px-3 py-1 text-xs text-slate-300 lg:mt-4 lg:inline-block">
-            {auth.user?.role ?? "-"}
+            {roleLabel}
           </span>
         </div>
 
@@ -49,21 +57,36 @@ export function DashboardPage() {
           <div className="rounded-xl bg-emerald-500 px-4 py-3 font-semibold text-slate-950">
             Tổng quan
           </div>
-          {futureModules.map((module) => (
+          {canManageCatalog ? (
+            <Link
+              to="/catalog"
+              className="block rounded-xl border border-emerald-900/60 bg-emerald-950/30 px-4 py-3 text-sm font-medium text-emerald-300 transition hover:bg-emerald-950/60"
+            >
+              UC002 · Danh mục thuốc
+            </Link>
+          ) : (
+            <div
+              className="flex items-center justify-between rounded-xl px-4 py-3 text-sm text-slate-500"
+              title="SRS UC002 chỉ định tác nhân Quản lý"
+            >
+              <span>UC002 · Danh mục thuốc</span>
+              <span className="text-[10px] uppercase tracking-wider">Không có quyền</span>
+            </div>
+          )}
+          {plannedModules.map((module) => (
             <div
               key={module}
               className="flex items-center justify-between rounded-xl border border-transparent px-4 py-3 text-sm text-slate-500"
-              title="Chờ baseline và Permission Matrix được phê duyệt"
             >
               <span>{module}</span>
-              <span className="text-[10px] uppercase tracking-wider">Chưa mở</span>
+              <span className="text-[10px] uppercase tracking-wider">Chưa triển khai</span>
             </div>
           ))}
         </nav>
 
         <div className="mt-8 border-t border-slate-800 pt-5">
           <p className="text-sm font-medium text-slate-200">{auth.user?.username}</p>
-          <p className="mt-1 text-xs text-slate-500">ID: {auth.user?.id}</p>
+          <p className="mt-1 text-xs text-slate-500">{roleLabel} · ID {auth.user?.id}</p>
           <button
             type="button"
             onClick={() => void handleLogout()}
@@ -77,11 +100,11 @@ export function DashboardPage() {
       <main className="p-5 sm:p-8 lg:p-10">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm text-slate-400">Dashboard</p>
-            <h2 className="mt-1 text-3xl font-bold">Tổng quan hệ thống</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-              Authentication đã hoạt động với backend thật. Các chức năng nghiệp vụ sẽ được mở
-              khi schema và Permission Matrix có nguồn phê duyệt.
+            <p className="text-sm text-slate-400">SRS V1.0 · Nhóm 14</p>
+            <h2 className="mt-1 text-3xl font-bold">Hệ thống quản lý nhà thuốc có tích hợp AI</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+              Baseline nghiệp vụ đã chuyển sang SRS nhà thuốc. UC001 xác thực đang hoạt động và
+              UC002 quản lý danh mục thuốc đã được mở cho vai trò Quản lý.
             </p>
           </div>
           <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
@@ -113,27 +136,28 @@ export function DashboardPage() {
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm text-slate-500">Trạng thái triển khai</p>
-                <h3 className="mt-1 text-xl font-semibold">Phase 2B technical readiness</h3>
+                <p className="text-sm text-slate-500">Đã triển khai</p>
+                <h3 className="mt-1 text-xl font-semibold">UC001 + UC002</h3>
               </div>
-              <span className="rounded-full border border-amber-800/70 bg-amber-950/40 px-3 py-1 text-xs font-semibold text-amber-300">
-                PARTIAL / BLOCKED
+              <span className="rounded-full border border-emerald-800/70 bg-emerald-950/40 px-3 py-1 text-xs font-semibold text-emerald-300">
+                PHARMACY SRS BASELINE
               </span>
             </div>
             <div className="mt-6 space-y-3 text-sm text-slate-300">
-              <CheckRow text="Authentication + refresh rotation + logout" />
-              <CheckRow text="Audit, correlation ID và structured logging" />
-              <CheckRow text="Idempotency, transaction boundary và PostgreSQL row lock" />
-              <CheckRow text="Migration, backup/restore và clean Compose smoke test" />
+              <CheckRow text="UC001: đăng nhập, xác định vai trò và phiên đăng nhập" />
+              <CheckRow text="Ba vai trò: Quản lý, Dược sĩ, Thu ngân" />
+              <CheckRow text="UC002: thêm, sửa, xóa, tra cứu thuốc" />
+              <CheckRow text="UC002: quản lý nhóm thuốc và đơn vị tính" />
             </div>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <p className="text-sm text-slate-500">Điều kiện mở nghiệp vụ</p>
-            <h3 className="mt-1 text-xl font-semibold">Cần nguồn phê duyệt</h3>
+            <p className="text-sm text-slate-500">Điểm cần giữ nguyên theo SRS</p>
+            <h3 className="mt-1 text-xl font-semibold">Không tự suy diễn yêu cầu</h3>
             <p className="mt-4 text-sm leading-6 text-slate-400">
-              Data Dictionary, Use Case và ma trận ROLE × FR × ACTION × API phải được xác định
-              trước khi bật các module kho. Dashboard không tự suy diễn quyền của từng role.
+              Các trường dữ liệu chưa được SRS định nghĩa cụ thể sẽ chưa được thêm. Những chỗ
+              mapping tác nhân còn mâu thuẫn trong SRS sẽ được đánh dấu để xử lý ở đúng Use Case,
+              thay vì tự chọn quyền.
             </p>
           </div>
         </section>
