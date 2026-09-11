@@ -22,14 +22,54 @@ export interface HealthResponse {
   ai: string;
 }
 
+interface ErrorEnvelope {
+  error?: unknown;
+  message?: unknown;
+  correlation_id?: unknown;
+}
+
 export class ApiError extends Error {
   readonly status: number;
+  readonly code: string | null;
+  readonly correlationId: string | null;
 
-  constructor(status: number, message: string) {
+  constructor(
+    status: number,
+    message: string,
+    code: string | null = null,
+    correlationId: string | null = null,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
+    this.correlationId = correlationId;
   }
+}
+
+async function buildApiError(response: Response): Promise<ApiError> {
+  let envelope: ErrorEnvelope | null = null;
+  try {
+    envelope = (await response.json()) as ErrorEnvelope;
+  } catch {
+    envelope = null;
+  }
+
+  const code = typeof envelope?.error === "string" ? envelope.error : null;
+  const message =
+    typeof envelope?.message === "string"
+      ? envelope.message
+      : `Request failed with status ${response.status}`;
+  const bodyCorrelationId =
+    typeof envelope?.correlation_id === "string" ? envelope.correlation_id : null;
+  const headerCorrelationId = response.headers.get("X-Correlation-ID");
+
+  return new ApiError(
+    response.status,
+    message,
+    code,
+    bodyCorrelationId ?? headerCorrelationId,
+  );
 }
 
 async function requestJson<T>(
@@ -45,7 +85,7 @@ async function requestJson<T>(
   });
 
   if (!response.ok) {
-    throw new ApiError(response.status, `Request failed with status ${response.status}`);
+    throw await buildApiError(response);
   }
 
   return response.json() as Promise<T>;
@@ -73,7 +113,7 @@ export async function logoutRequest(refreshToken: string): Promise<void> {
   });
 
   if (!response.ok && response.status !== 401) {
-    throw new ApiError(response.status, `Logout failed with status ${response.status}`);
+    throw await buildApiError(response);
   }
 }
 
@@ -86,7 +126,7 @@ export function currentUserRequest(accessToken: string): Promise<CurrentUser> {
 export async function healthRequest(): Promise<HealthResponse> {
   const response = await fetch(`${apiBaseUrl}/health`);
   if (!response.ok) {
-    throw new ApiError(response.status, "Backend health check failed");
+    throw await buildApiError(response);
   }
   return response.json() as Promise<HealthResponse>;
 }
