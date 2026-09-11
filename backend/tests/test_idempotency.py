@@ -1,3 +1,4 @@
+import asyncio
 from uuid import uuid4
 
 import pytest
@@ -86,3 +87,28 @@ async def test_same_key_is_isolated_by_scope() -> None:
         )
         assert first.record.id != second.record.id
         await session.rollback()
+
+
+@pytest.mark.asyncio
+async def test_concurrent_same_key_has_one_initial_claim_and_one_replay() -> None:
+    scope = f"test.concurrent.{uuid4()}"
+    key = str(uuid4())
+    request_hash = hash_payload(b"same-concurrent-input")
+
+    async def worker() -> bool:
+        async with SessionLocal() as session:
+            claimed = await claim(
+                session,
+                scope=scope,
+                key=key,
+                request_hash=request_hash,
+            )
+            if not claimed.is_replay:
+                complete(claimed.record)
+                await session.commit()
+            else:
+                await session.rollback()
+            return claimed.is_replay
+
+    results = await asyncio.gather(worker(), worker())
+    assert sorted(results) == [False, True]
