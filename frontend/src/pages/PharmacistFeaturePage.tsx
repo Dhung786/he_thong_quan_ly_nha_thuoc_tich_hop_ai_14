@@ -2,6 +2,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../auth/auth-context";
 import { PharmacistSidebar } from "../components/PharmacistSidebar";
+import { pharmacistDemoFeatureData } from "../lib/demo-data";
 import { pharmacistFeatureContent } from "../lib/feature-content";
 
 interface PharmacistFeaturePageProps {
@@ -19,6 +20,7 @@ export function PharmacistFeaturePage({ title, description, status, safetyNote }
     fields: ["Thông tin"],
     columns: ["Thông tin", "Trạng thái"],
   };
+  const demo = pharmacistDemoFeatureData[title];
 
   if (auth.user?.role !== "PHARMACIST") {
     return <Navigate to="/dashboard" replace />;
@@ -57,12 +59,11 @@ export function PharmacistFeaturePage({ title, description, status, safetyNote }
             <section className="rounded-3xl border border-slate-700/70 bg-[#18253a] p-7 shadow-2xl shadow-slate-950/20 sm:p-9">
               <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                 <div className="max-w-3xl">
+                  <div className="mb-3 inline-flex rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-bold text-violet-300">DỮ LIỆU DEMO</div>
                   <h2 className="text-3xl font-bold">{title}</h2>
                   <p className="mt-3 leading-7 text-slate-400">{description}</p>
                 </div>
-                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-                  {status}
-                </div>
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">{status}</div>
               </div>
 
               <div className="mt-8 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
@@ -74,7 +75,7 @@ export function PharmacistFeaturePage({ title, description, status, safetyNote }
                         key={action}
                         type="button"
                         disabled
-                        title="Sẽ hoạt động khi API nghiệp vụ được kết nối"
+                        title="Dữ liệu demo - thao tác sẽ hoạt động khi API nghiệp vụ được kết nối"
                         className="rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-left text-sm font-semibold text-slate-300 disabled:cursor-not-allowed disabled:opacity-70"
                       >
                         {action}
@@ -89,7 +90,7 @@ export function PharmacistFeaturePage({ title, description, status, safetyNote }
                     {content.fields.map((field) => (
                       <div key={field} className="rounded-xl border border-slate-800 bg-slate-950/25 px-4 py-3">
                         <p className="text-xs uppercase tracking-wide text-slate-500">{field}</p>
-                        <p className="mt-2 text-sm text-slate-400">Chưa có dữ liệu</p>
+                        <p className="mt-2 text-sm font-semibold text-slate-200">{demo?.fieldValues[field] ?? "Chưa có dữ liệu"}</p>
                       </div>
                     ))}
                   </div>
@@ -99,7 +100,7 @@ export function PharmacistFeaturePage({ title, description, status, safetyNote }
               <div className="mt-6 overflow-hidden rounded-2xl border border-slate-700">
                 <div className="flex items-center justify-between gap-4 border-b border-slate-700 bg-slate-950/30 px-5 py-4">
                   <h3 className="font-bold text-slate-100">Danh sách dữ liệu</h3>
-                  <span className="text-xs text-slate-500">Dữ liệu thật sẽ hiển thị tại đây</span>
+                  <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-300">Demo</span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[680px] text-left text-sm">
@@ -110,30 +111,30 @@ export function PharmacistFeaturePage({ title, description, status, safetyNote }
                         ))}
                       </tr>
                     </thead>
-                    <tbody>
-                      <tr>
-                        <td colSpan={content.columns.length} className="px-5 py-10 text-center text-slate-500">
-                          Chưa có dữ liệu để hiển thị.
-                        </td>
-                      </tr>
+                    <tbody className="divide-y divide-slate-800">
+                      {demo?.rows?.length ? demo.rows.map((row, rowIndex) => (
+                        <tr key={`${title}-${rowIndex}`} className="hover:bg-slate-900/35">
+                          {content.columns.map((column, columnIndex) => (
+                            <td key={`${column}-${columnIndex}`} className="px-5 py-4 text-slate-300">{row[columnIndex] ?? "—"}</td>
+                          ))}
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan={content.columns.length} className="px-5 py-10 text-center text-slate-500">Chưa có dữ liệu để hiển thị.</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
 
               {(content.note || safetyNote) && (
-                <div className="mt-6 rounded-2xl border border-sky-700/30 bg-sky-950/25 px-5 py-4 text-sm leading-6 text-sky-200/90">
-                  {content.note ?? safetyNote}
-                </div>
+                <div className="mt-6 rounded-2xl border border-sky-700/30 bg-sky-950/25 px-5 py-4 text-sm leading-6 text-sky-200/90">{content.note ?? safetyNote}</div>
               )}
 
               <div className="mt-7 flex flex-wrap gap-3">
-                <Link to="/dashboard" className="rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-emerald-400">
-                  ← Về Dashboard
-                </Link>
-                <Link to="/pharmacist/medicines" className="rounded-xl border border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800">
-                  Tra cứu thuốc
-                </Link>
+                <Link to="/dashboard" className="rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-emerald-400">← Về Dashboard</Link>
+                <Link to="/pharmacist/medicines" className="rounded-xl border border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800">Tra cứu thuốc</Link>
               </div>
             </section>
           </div>
