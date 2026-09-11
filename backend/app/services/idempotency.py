@@ -4,6 +4,7 @@ from hashlib import sha256
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import ApplicationConflict
 from app.models.idempotency import IdempotencyRecord
 from app.repositories.idempotency_repository import (
     get_idempotency_record_for_update,
@@ -11,7 +12,7 @@ from app.repositories.idempotency_repository import (
 )
 
 
-class IdempotencyConflict(Exception):
+class IdempotencyConflict(ApplicationConflict):
     pass
 
 
@@ -47,11 +48,20 @@ async def claim(
         idempotency_key=key,
     )
     if existing is None:
-        raise IdempotencyConflict("Unable to resolve idempotency record")
+        raise IdempotencyConflict(
+            "Unable to resolve idempotency record",
+            code="idempotency_conflict",
+        )
     if existing.request_hash != request_hash:
-        raise IdempotencyConflict("Idempotency key has different input")
+        raise IdempotencyConflict(
+            "Idempotency key has different input",
+            code="idempotency_conflict",
+        )
     if existing.status != "COMPLETED":
-        raise IdempotencyConflict("Idempotent operation is already in progress")
+        raise IdempotencyConflict(
+            "Idempotent operation is already in progress",
+            code="idempotency_conflict",
+        )
     return IdempotencyClaim(record=existing, is_replay=True)
 
 
