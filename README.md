@@ -1,66 +1,132 @@
 # Hệ thống Quản lý Kho tích hợp AI — Đề tài 14
 
-Repository triển khai theo **MASTER PROMPT V2.0**.
+Repository triển khai theo **MASTER PROMPT V2.0** với PostgreSQL là source of truth và nguyên tắc không tự suy diễn business rule/permission còn thiếu.
 
-## Trạng thái
+## Trạng thái hiện tại
 
-- Phase 0 audit: **PARTIAL** — repository mới đã audit, nhưng Phase 1 baseline/SRS/Use Case/Test Specification chưa có trong repo.
-- Phase 2A technical foundation: phần hạ tầng cơ bản đã có CI evidence; authentication persistence đang được bổ sung và phải qua CI trước khi gọi là VERIFIED.
-- Permission Matrix nghiệp vụ vẫn **BLOCKED**; không tự suy diễn quyền theo role.
+- Phase 0 audit: **PARTIAL** — Master Prompt và repository đã audit; baseline Phase 1 chính thức vẫn chưa truy xuất được.
+- Phase 2A foundation: authentication, refresh rotation/revocation, generic RBAC guard, migration, seed, common error handling, structured logging/correlation ID đã có execution evidence.
+- Phase 2B technical readiness: transaction boundary, idempotency, PostgreSQL row locking, audit helper, backup/restore, health/migration visibility đã có execution evidence.
+- Frontend: login thật, protected route, dashboard thật, `/me`, `/health`, logout và session refresh foundation.
+- Business modules: **BLOCKED** khi còn thiếu approved Data Dictionary/Use Case/Permission Matrix. Không tự suy diễn quyền theo role hoặc kiểu dữ liệu tồn kho.
+
+Trạng thái tổng thể vẫn là **PARTIAL / NOT COMPLETE**.
 
 ## Stack
 
 - Frontend: React + TypeScript + Vite + React Router + TanStack Query + React Hook Form + Zod + Tailwind CSS.
 - Backend: Python 3.12 + FastAPI + Pydantic + SQLAlchemy 2 + Alembic.
-- Database: PostgreSQL.
-- CI: GitHub Actions.
+- Database: PostgreSQL 17.
+- DevOps: Docker Compose + GitHub Actions.
 
-## Chạy local bằng Docker
+## Chạy nhanh bằng Docker Compose
 
-1. Sao chép file môi trường:
+Yêu cầu: Docker Desktop/Docker Engine đang chạy.
 
-   ```bash
-   cp .env.example .env
-   ```
+Tại thư mục repository:
 
-2. Thay `JWT_SECRET` bằng chuỗi ngẫu nhiên dài, không commit `.env`.
+```bash
+docker compose up -d --build
+```
 
-3. Nếu muốn seed tài khoản admin demo, đặt cả hai biến trong `.env` và dùng mật khẩu chỉ dành cho local/demo:
+Kiểm tra service:
 
-   ```text
-   SEED_ADMIN_USERNAME=admin
-   SEED_ADMIN_PASSWORD=<your-local-demo-password>
-   ```
+```bash
+docker compose ps
+```
 
-4. Khởi động:
+Các địa chỉ local:
 
-   ```bash
-   docker compose up --build
-   ```
+- Frontend: `http://localhost:5173`
+- Login: `http://localhost:5173/login`
+- Backend health: `http://localhost:8000/health`
+- FastAPI docs: `http://localhost:8000/docs`
 
-5. Backend health: `http://localhost:8000/health`
+### Tài khoản development local
 
-6. Frontend: `http://localhost:5173`
+Docker Compose development mặc định seed tài khoản:
 
-## Authentication API foundation
+```text
+username: admin
+password: Admin123!ChangeMe
+```
+
+Đây là **development-only default**, không phải production credential. Có thể override bằng environment variables:
+
+```text
+SEED_ADMIN_USERNAME=<local-username>
+SEED_ADMIN_PASSWORD=<local-password>
+```
+
+Production/shared environment phải dùng secret riêng và không commit `.env`.
+
+## Cấu hình môi trường
+
+`.env.example` mô tả các biến hỗ trợ. Nếu muốn override Compose defaults:
+
+```bash
+cp .env.example .env
+```
+
+Sau đó thay ít nhất `JWT_SECRET` và các credential local theo môi trường của bạn. `.env` đã được ignore và không được commit.
+
+## Authentication API
+
+Các endpoint hiện đang triển khai:
 
 - `POST /api/v1/auth/login`
 - `POST /api/v1/auth/refresh`
 - `POST /api/v1/auth/logout`
 - `GET /api/v1/auth/me`
+- `GET /api/v1/status`
+- `GET /health`
 
-Access token dùng JWT. Refresh token là opaque token, chỉ hash SHA-256 được lưu trong PostgreSQL. Refresh token cũ bị revoke khi rotation thành công.
+Access token dùng JWT. Refresh token là opaque token; database chỉ lưu token hash. Refresh token cũ bị revoke khi rotation thành công.
+
+Chi tiết contract và error model: [`docs/API.md`](docs/API.md).
+
+## Frontend hiện tại
+
+UI đã có:
+
+- `/login` — form login nối backend thật.
+- `/dashboard` — protected route.
+- user/role lấy từ `/api/v1/auth/me`.
+- health cards lấy từ `/health`.
+- logout revoke refresh token và xóa local session.
+- session dùng `sessionStorage`, không lưu token vĩnh viễn trong `localStorage`.
+- business modules hiển thị `CHƯA MỞ` cho tới khi schema/permission được phê duyệt.
+
+Hướng dẫn sử dụng: [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md).
+
+## Roles
+
+Chỉ có ba role được định nghĩa:
+
+```text
+ADMIN
+WAREHOUSE_KEEPER
+ACCOUNTANT
+```
+
+Generic backend RBAC guard đã tồn tại. Mapping quyền nghiệp vụ `ROLE × FR × ACTION × API` chưa được tự tạo khi Permission Matrix chính thức còn thiếu.
 
 ## Migration / seed
 
-Trong backend container:
+Compose backend tự chạy trước khi serve:
 
 ```bash
 alembic upgrade head
 python -m app.seed
 ```
 
-Migration `0002_auth_foundation` là **Technical Implementation Extension** cho authentication/audit/session security. Domain schema chính thức khác vẫn chỉ được bổ sung khi đủ baseline để tránh tự bịa business rule hoặc kiểu dữ liệu.
+Migration hiện tại:
+
+- `0001_foundation_metadata`
+- `0002_auth_foundation`
+- `0003_idempotency_infrastructure`
+
+Các bảng kỹ thuật phục vụ authentication/audit/idempotency là **Technical Implementation Extension**; domain schema nghiệp vụ chính thức chỉ được bổ sung khi có nguồn đủ mạnh.
 
 ## Kiểm thử
 
@@ -71,6 +137,8 @@ cd backend
 pip install -e ".[dev]"
 ruff check app tests
 mypy app
+alembic upgrade head
+python -m app.seed
 pytest -q
 ```
 
@@ -85,4 +153,44 @@ npm run test
 npm run build
 ```
 
-> Không được coi dự án là VERIFIED/PASS/DONE nếu chưa có execution evidence thực tế.
+CI hiện còn kiểm tra:
+
+- clean Docker Compose startup;
+- backend health + migration revision;
+- seeded login → `/me` → logout;
+- PostgreSQL backup → delete probe → restore → verify;
+- frontend serving.
+
+> `IMPLEMENTED`, `VERIFIED` và `DONE` là ba trạng thái khác nhau. Không gọi toàn hệ thống DONE khi business modules/traceability bắt buộc còn thiếu.
+
+## Backup / restore
+
+Backup:
+
+```bash
+python scripts/backup_db.py --output backups/warehouse_ai.dump
+```
+
+Restore yêu cầu xác nhận rõ:
+
+```bash
+python scripts/restore_db.py backups/warehouse_ai.dump --confirm-restore
+```
+
+Xem runbook chi tiết trong thư mục `docs/`.
+
+## Phạm vi chưa triển khai
+
+Chưa mở API/UI nghiệp vụ cho:
+
+- Nhóm hàng / ĐVT.
+- Hàng hóa.
+- Nhà cung cấp.
+- Nhập kho / tồn đầu kỳ.
+- Xuất kho.
+- Tồn kho / thẻ kho.
+- Cảnh báo.
+- Báo cáo / Excel / PDF.
+- AI nghiệp vụ.
+
+Blocker được theo dõi trong GitHub issue #2: cần baseline Phase 1/Data Dictionary/Use Case/Permission Matrix để triển khai đúng thay vì đoán requirement.
