@@ -13,8 +13,8 @@ async def seed() -> None:
     async with SessionLocal() as session:
         roles: dict[str, Role] = {}
         for role_name in ROLE_NAMES:
-            result = await session.execute(select(Role).where(Role.name == role_name))
-            role = result.scalar_one_or_none()
+            role_result = await session.execute(select(Role).where(Role.name == role_name))
+            role: Role | None = role_result.scalar_one_or_none()
             if role is None:
                 role = Role(name=role_name)
                 session.add(role)
@@ -28,8 +28,8 @@ async def seed() -> None:
                 "SEED_ADMIN_USERNAME and SEED_ADMIN_PASSWORD must be provided together"
             )
         if username and password:
-            result = await session.execute(select(User).where(User.username == username))
-            user = result.scalar_one_or_none()
+            user_result = await session.execute(select(User).where(User.username == username))
+            user: User | None = user_result.scalar_one_or_none()
             if user is None:
                 session.add(
                     User(
@@ -42,14 +42,14 @@ async def seed() -> None:
             elif user.role_id != roles["ADMIN"].id:
                 raise RuntimeError("Configured seed admin username already has another role")
 
-        result = await session.execute(
+        metadata_result = await session.execute(
             select(SystemMetadata).where(SystemMetadata.key == "foundation_version")
         )
-        item = result.scalar_one_or_none()
-        if item is None:
+        metadata: SystemMetadata | None = metadata_result.scalar_one_or_none()
+        if metadata is None:
             session.add(SystemMetadata(key="foundation_version", value="phase2a-v2"))
         else:
-            item.value = "phase2a-v2"
+            metadata.value = "phase2a-v2"
         await session.commit()
 
 
