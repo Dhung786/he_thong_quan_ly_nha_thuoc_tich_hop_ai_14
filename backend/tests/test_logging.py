@@ -1,9 +1,15 @@
+import io
 import json
 import logging
 
 from fastapi.testclient import TestClient
 
-from app.core.logging import JsonFormatter, bind_correlation_id, reset_correlation_id
+from app.core.logging import (
+    APP_LOGGER_NAME,
+    JsonFormatter,
+    bind_correlation_id,
+    reset_correlation_id,
+)
 from app.main import app
 
 client = TestClient(app)
@@ -39,27 +45,34 @@ def test_json_formatter_uses_whitelist_and_context_correlation_id() -> None:
     assert "DO-NOT-LOG" not in rendered
 
 
-def test_request_log_contains_correlation_without_sensitive_headers(capfd) -> None:
+def test_request_log_contains_correlation_without_sensitive_headers() -> None:
     correlation_id = "123e4567-e89b-12d3-a456-426614174000"
     secret = "Bearer REQUEST-SECRET-MUST-NOT-LOG"
+    stream = io.StringIO()
+    handler = logging.StreamHandler(stream)
+    handler.setFormatter(JsonFormatter())
+    app_logger = logging.getLogger(APP_LOGGER_NAME)
+    app_logger.addHandler(handler)
 
-    response = client.get(
-        "/api/v1/status",
-        headers={
-            "X-Correlation-ID": correlation_id,
-            "Authorization": secret,
-        },
-    )
+    try:
+        response = client.get(
+            "/api/v1/status",
+            headers={
+                "X-Correlation-ID": correlation_id,
+                "Authorization": secret,
+            },
+        )
+    finally:
+        app_logger.removeHandler(handler)
+        handler.close()
+
     assert response.status_code == 200
     assert response.headers["X-Correlation-ID"] == correlation_id
 
-    stdout = capfd.readouterr().out
+    rendered = stream.getvalue()
     structured_lines = []
-    for line in stdout.splitlines():
-        try:
-            payload = json.loads(line)
-        except json.JSONDecodeError:
-            continue
+    for line in rendered.splitlines():
+        payload = json.loads(line)
         if payload.get("event") == "http_request_completed":
             structured_lines.append(payload)
 
@@ -70,4 +83,4 @@ def test_request_log_contains_correlation_without_sensitive_headers(capfd) -> No
     assert request_log["path"] == "/api/v1/status"
     assert request_log["status_code"] == 200
     assert isinstance(request_log["duration_ms"], int | float)
-    assert "REQUEST-SECRET-MUST-NOT-LOG" not in stdout
+    assert "REQUEST-SECRET-MUST-NOT-LOG" not in rendered
