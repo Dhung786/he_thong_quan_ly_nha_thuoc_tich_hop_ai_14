@@ -3,6 +3,20 @@ from pydantic import ValidationError
 
 from app.core.config import Settings
 
+SEED_ENV_VARS = (
+    "SEED_ADMIN_USERNAME",
+    "SEED_ADMIN_PASSWORD",
+    "SEED_WAREHOUSE_KEEPER_USERNAME",
+    "SEED_WAREHOUSE_KEEPER_PASSWORD",
+    "SEED_ACCOUNTANT_USERNAME",
+    "SEED_ACCOUNTANT_PASSWORD",
+)
+
+
+def clear_seed_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in SEED_ENV_VARS:
+        monkeypatch.delenv(name, raising=False)
+
 
 def test_development_allows_explicit_dev_placeholder() -> None:
     settings = Settings(
@@ -43,12 +57,17 @@ def test_production_accepts_non_placeholder_value() -> None:
         {"seed_accountant_password": "password-only"},
     ],
 )
-def test_seed_credentials_must_be_configured_in_pairs(kwargs: dict[str, str]) -> None:
+def test_seed_credentials_must_be_configured_in_pairs(
+    kwargs: dict[str, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clear_seed_environment(monkeypatch)
     with pytest.raises(ValidationError):
         Settings(**kwargs)
 
 
-def test_all_three_seed_role_pairs_are_accepted() -> None:
+def test_all_three_seed_role_pairs_are_accepted(monkeypatch: pytest.MonkeyPatch) -> None:
+    clear_seed_environment(monkeypatch)
     settings = Settings(
         seed_admin_username="admin",
         seed_admin_password="admin-password",
