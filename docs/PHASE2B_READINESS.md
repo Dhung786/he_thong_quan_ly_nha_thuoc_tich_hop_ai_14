@@ -70,7 +70,11 @@ See GitHub issue #2 for the active unblock request.
 - added request payload hashing so the same key cannot silently represent different input;
 - added claim/replay/completion service behavior without exposing a business endpoint;
 - added tests for completed replay detection, conflicting input rejection and scope isolation;
-- CI run #20 verified Ruff, mypy, migration from an empty PostgreSQL database, seed, pytest and the frontend quality gates.
+- added a two-session concurrency test proving one initial claim and one replay for the same key/input;
+- added a common `ApplicationConflict` type and FastAPI handler for safe HTTP `409` responses with correlation IDs;
+- made idempotency conflicts use the common conflict type;
+- added a test for the safe `409` response contract;
+- latest head CI run #26 verified Ruff, mypy, migration from an empty PostgreSQL database, seed, pytest and the frontend quality gates.
 
 ## Next business implementation after unblock
 
@@ -83,6 +87,6 @@ Once the approved Phase 1 baseline is available:
 5. Implement phiếu nhập and `TON_DAU_KY` transaction flow.
 6. Implement phiếu xuất with deterministic ascending row locks.
 7. Bind the verified idempotency infrastructure to stock-changing commands and implement cancellation.
-8. Run required concurrency test before advancing to Phase 2C.
+8. Run the required stock concurrency test before advancing to Phase 2C.
 
 No business endpoint should be exposed before its permission and data contract are traceable to the approved baseline.
