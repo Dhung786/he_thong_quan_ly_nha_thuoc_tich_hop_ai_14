@@ -7,6 +7,7 @@ import { MedicineCatalogPage } from "./pages/MedicineCatalogPage";
 import { PharmacistFeaturePage } from "./pages/PharmacistFeaturePage";
 import { PharmacistMedicineLookupPage } from "./pages/PharmacistMedicineLookupPage";
 import { RoleDashboardPage } from "./pages/RoleDashboardPage";
+import { RoleUseCasePage } from "./pages/RoleUseCasePage";
 
 export default function App() {
   return (
@@ -14,12 +15,14 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<RequireAuth />}>
         <Route path="/dashboard" element={<RoleDashboardPage />} />
+        <Route path="/use-cases" element={<RoleUseCasePage />} />
         <Route path="/catalog" element={<MedicineCatalogPage />} />
 
         <Route path="/pharmacist/medicines" element={<PharmacistMedicineLookupPage />} />
-        <Route path="/pharmacist/inventory" element={<PharmacistFeaturePage eyebrow="UC003 · UC006" title="Tồn kho & lô thuốc" description="Dược sĩ theo dõi số lượng tồn, thông tin lô và hạn sử dụng để phục vụ tra cứu và hỗ trợ bán thuốc." backendStatus="Chờ UC003/UC006" />} />
+        <Route path="/pharmacist/inventory" element={<PharmacistFeaturePage eyebrow="UC006" title="Tồn kho & lô thuốc" description="Dược sĩ theo dõi số lượng tồn, ngưỡng tồn tối thiểu và cảnh báo tồn thấp theo phạm vi UC006. Thông tin lô được hiển thị ở mức tra cứu khi backend tương ứng sẵn sàng." backendStatus="Chờ UC006" />} />
+        <Route path="/pharmacist/suppliers" element={<PharmacistFeaturePage eyebrow="UC005" title="Nhà cung cấp" description="Theo đặc tả UC005, Dược sĩ là một tác nhân có quyền truy cập chức năng nhà cung cấp. Giao diện này sẽ kết nối API tra cứu/cập nhật nhà cung cấp khi backend hoàn tất." backendStatus="Chờ UC005" />} />
         <Route path="/pharmacist/alerts" element={<PharmacistFeaturePage eyebrow="UC008" title="Cảnh báo" description="Khu vực tập trung cảnh báo thuốc tồn thấp, thuốc hết hàng, lô sắp hết hạn và lô đã hết hạn dành cho Dược sĩ." backendStatus="Chờ UC008" />} />
-        <Route path="/pharmacist/sales-support" element={<PharmacistFeaturePage eyebrow="UC004 · Hỗ trợ nghiệp vụ" title="Hỗ trợ bán thuốc" description="Không gian hỗ trợ Dược sĩ trong quá trình bán thuốc: tra cứu thuốc, kiểm tra tồn và chuẩn bị thông tin tư vấn." backendStatus="Chờ UC004" />} />
+        <Route path="/pharmacist/sales-support" element={<PharmacistFeaturePage eyebrow="Hỗ trợ nghiệp vụ" title="Hỗ trợ bán thuốc" description="Không gian hỗ trợ Dược sĩ trong quá trình bán thuốc: tra cứu thuốc, kiểm tra tồn và chuẩn bị thông tin tư vấn. Đây là giao diện hỗ trợ theo yêu cầu bổ sung, không gắn UC004 cho Dược sĩ vì bảng mapping SRS không liệt kê UC004 cho vai trò này." backendStatus="Chờ backend nghiệp vụ liên quan" />} />
         <Route path="/pharmacist/ai" element={<PharmacistFeaturePage eyebrow="UC010 · UC011 · UC013" title="AI Dược sĩ" description="Dược sĩ dùng AI để tham khảo, tóm tắt thông tin thuốc và hỗ trợ đọc báo cáo nghiệp vụ." backendStatus="AI provider chưa cấu hình" safetyNote="Scope Guard phải từ chối chẩn đoán, kê đơn và chỉ định điều trị; AI không được tự sửa tồn kho, hóa đơn hoặc dữ liệu nghiệp vụ." />} />
         <Route path="/pharmacist/process" element={<PharmacistFeaturePage eyebrow="UC012" title="Quy trình nội bộ" description="Khu vực hỏi đáp các quy trình nội bộ dành cho Dược sĩ." backendStatus="Chờ nguồn tài liệu nội bộ + AI adapter" />} />
         <Route path="/pharmacist/reports" element={<PharmacistFeaturePage eyebrow="UC009 · UC011" title="Báo cáo" description="Dược sĩ xem các báo cáo phục vụ nghiệp vụ như tồn kho, thuốc tồn thấp và thuốc sắp hết hạn." backendStatus="Chờ UC009/UC011" />} />
