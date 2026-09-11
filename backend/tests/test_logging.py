@@ -6,7 +6,6 @@ from fastapi.testclient import TestClient
 from app.core.logging import JsonFormatter, bind_correlation_id, reset_correlation_id
 from app.main import app
 
-
 client = TestClient(app)
 
 
