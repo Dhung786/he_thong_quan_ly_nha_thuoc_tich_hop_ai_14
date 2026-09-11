@@ -25,23 +25,21 @@ def provider_is_configured() -> bool:
     if provider == "disabled":
         return False
     if provider == "openai_compatible":
-        return bool(
-            settings.ai_api_key
-            and settings.ai_base_url
-            and settings.ai_model
-        )
+        return bool(settings.ai_api_key and settings.ai_base_url and settings.ai_model)
     return False
 
 
 async def generate_ai_text(*, system_prompt: str, user_prompt: str) -> AIProviderResult:
     provider = settings.ai_provider.strip().lower()
-    if provider != "openai_compatible" or not provider_is_configured():
+    api_key = settings.ai_api_key
+    base_url_value = settings.ai_base_url
+    model = settings.ai_model
+    if provider != "openai_compatible" or not (api_key and base_url_value and model):
         raise AIProviderUnavailable("AI provider is not configured")
 
-    base_url = settings.ai_base_url.rstrip("/")
-    endpoint = f"{base_url}/chat/completions"
+    endpoint = f"{base_url_value.rstrip('/')}/chat/completions"
     payload = {
-        "model": settings.ai_model,
+        "model": model,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
@@ -50,7 +48,7 @@ async def generate_ai_text(*, system_prompt: str, user_prompt: str) -> AIProvide
         "max_tokens": settings.ai_max_tokens,
     }
     headers = {
-        "Authorization": f"Bearer {settings.ai_api_key}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
 
@@ -69,4 +67,4 @@ async def generate_ai_text(*, system_prompt: str, user_prompt: str) -> AIProvide
 
     if not text:
         raise AIProviderFailure("AI provider returned an empty response")
-    return AIProviderResult(text=text, provider=provider, model=settings.ai_model)
+    return AIProviderResult(text=text, provider=provider, model=model)
