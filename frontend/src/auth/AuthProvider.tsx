@@ -56,8 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const bootstrapStarted = useRef(false);
 
   const establishSession = useCallback(async (tokens: TokenPair) => {
-    storeTokens(tokens);
     const currentUser = await currentUserRequest(tokens.access_token);
+    storeTokens(tokens);
     setUser(currentUser);
     setStatus("authenticated");
   }, []);
@@ -101,7 +101,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async ({ username, password }: LoginCredentials) => {
       const tokens = await loginRequest(username, password);
-      await establishSession(tokens);
+      try {
+        await establishSession(tokens);
+      } catch (error) {
+        clearTokens();
+        setUser(null);
+        setStatus("unauthenticated");
+        throw error;
+      }
     },
     [establishSession],
   );
