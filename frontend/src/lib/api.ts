@@ -55,6 +55,38 @@ export interface MedicineInput {
   unit_id: number;
 }
 
+export type AdminRole = "MANAGER" | "PHARMACIST" | "CASHIER";
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  role: AdminRole;
+  role_label: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminSummary {
+  total_users: number;
+  active_users: number;
+  inactive_users: number;
+  managers: number;
+  pharmacists: number;
+  cashiers: number;
+  audit_events: number;
+}
+
+export interface AdminAuditLog {
+  id: number;
+  actor_user_id: number | null;
+  actor_username: string | null;
+  event_type: string;
+  correlation_id: string | null;
+  details: Record<string, unknown>;
+  created_at: string;
+}
+
 interface ErrorEnvelope {
   error?: unknown;
   message?: unknown;
@@ -290,6 +322,71 @@ export function updateMedicineRequest(
 export function deleteMedicineRequest(accessToken: string, id: number): Promise<void> {
   return requestEmpty(`/api/v1/catalog/medicines/${id}`, {
     method: "DELETE",
+    headers: bearer(accessToken),
+  });
+}
+
+export function adminSummaryRequest(accessToken: string): Promise<AdminSummary> {
+  return requestJson<AdminSummary>("/api/v1/admin/summary", {
+    headers: bearer(accessToken),
+  });
+}
+
+export function adminUsersRequest(accessToken: string): Promise<AdminUser[]> {
+  return requestJson<AdminUser[]>("/api/v1/admin/users", {
+    headers: bearer(accessToken),
+  });
+}
+
+export function createAdminUserRequest(
+  accessToken: string,
+  payload: { username: string; password: string; role: AdminRole },
+): Promise<AdminUser> {
+  return requestJson<AdminUser>("/api/v1/admin/users", {
+    method: "POST",
+    headers: bearer(accessToken),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateAdminUserRoleRequest(
+  accessToken: string,
+  userId: number,
+  role: AdminRole,
+): Promise<AdminUser> {
+  return requestJson<AdminUser>(`/api/v1/admin/users/${userId}/role`, {
+    method: "PUT",
+    headers: bearer(accessToken),
+    body: JSON.stringify({ role }),
+  });
+}
+
+export function updateAdminUserStatusRequest(
+  accessToken: string,
+  userId: number,
+  isActive: boolean,
+): Promise<AdminUser> {
+  return requestJson<AdminUser>(`/api/v1/admin/users/${userId}/status`, {
+    method: "PUT",
+    headers: bearer(accessToken),
+    body: JSON.stringify({ is_active: isActive }),
+  });
+}
+
+export function resetAdminUserPasswordRequest(
+  accessToken: string,
+  userId: number,
+  password: string,
+): Promise<void> {
+  return requestEmpty(`/api/v1/admin/users/${userId}/password`, {
+    method: "PUT",
+    headers: bearer(accessToken),
+    body: JSON.stringify({ password }),
+  });
+}
+
+export function adminAuditLogsRequest(accessToken: string): Promise<AdminAuditLog[]> {
+  return requestJson<AdminAuditLog[]>("/api/v1/admin/audit-logs?limit=100", {
     headers: bearer(accessToken),
   });
 }
