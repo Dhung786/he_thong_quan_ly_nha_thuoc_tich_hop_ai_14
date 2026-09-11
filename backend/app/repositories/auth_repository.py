@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from app.models.auth import AuditLog, RefreshToken, User
+from app.models.auth import RefreshToken, User
 
 
 async def get_user_by_username(session: AsyncSession, username: str) -> User | None:
@@ -32,7 +32,3 @@ async def get_refresh_token_for_update(
 
 def add_refresh_token(session: AsyncSession, refresh_token: RefreshToken) -> None:
     session.add(refresh_token)
-
-
-def add_audit_log(session: AsyncSession, audit_log: AuditLog) -> None:
-    session.add(audit_log)
