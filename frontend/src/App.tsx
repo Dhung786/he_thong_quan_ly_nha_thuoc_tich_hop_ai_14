@@ -18,12 +18,34 @@ export default function App() {
 
         <Route path="/pharmacist/medicines" element={<PharmacistMedicineLookupPage />} />
         <Route
+          path="/pharmacist/inventory"
+          element={
+            <PharmacistFeaturePage
+              eyebrow="UC003 · UC006"
+              title="Tồn kho & lô thuốc"
+              description="Dược sĩ theo dõi số lượng tồn, thông tin lô và hạn sử dụng để phục vụ tra cứu và hỗ trợ bán thuốc. Giao diện chỉ đọc sẽ kết nối dữ liệu thật khi API tồn kho/lô thuốc hoàn tất."
+              backendStatus="Chờ UC003/UC006"
+            />
+          }
+        />
+        <Route
+          path="/pharmacist/alerts"
+          element={
+            <PharmacistFeaturePage
+              eyebrow="UC008"
+              title="Cảnh báo"
+              description="Khu vực tập trung cảnh báo thuốc tồn thấp, thuốc hết hàng, lô sắp hết hạn và lô đã hết hạn dành cho Dược sĩ."
+              backendStatus="Chờ UC008"
+            />
+          }
+        />
+        <Route
           path="/pharmacist/sales-support"
           element={
             <PharmacistFeaturePage
               eyebrow="UC004 · Hỗ trợ nghiệp vụ"
               title="Hỗ trợ bán thuốc"
-              description="Không gian hỗ trợ Dược sĩ trong quá trình bán thuốc. Giao diện chưa tạo hóa đơn hoặc trừ tồn cho tới khi backend UC004 và quy tắc chọn lô được hoàn tất."
+              description="Không gian hỗ trợ Dược sĩ trong quá trình bán thuốc: tra cứu thuốc, kiểm tra tồn và chuẩn bị thông tin tư vấn. Giao diện chưa tạo hóa đơn hoặc trừ tồn cho tới khi backend UC004 và quy tắc chọn lô được hoàn tất."
               backendStatus="Chờ UC004"
             />
           }
@@ -46,9 +68,31 @@ export default function App() {
             <PharmacistFeaturePage
               eyebrow="UC012"
               title="Quy trình nội bộ"
-              description="Khu vực hỏi đáp các quy trình nội bộ dành cho Dược sĩ. Nội dung chỉ được trả lời từ nguồn quy trình nội bộ đã được cung cấp và kiểm soát."
+              description="Khu vực hỏi đáp các quy trình nội bộ dành cho Dược sĩ, gồm quy trình bán thuốc, kiểm kê, xử lý thuốc sắp hết hạn và tiếp nhận đơn."
               backendStatus="Chờ nguồn tài liệu nội bộ + AI adapter"
               safetyNote="Nếu câu hỏi nằm ngoài dữ liệu nội bộ hoặc yêu cầu chẩn đoán/kê đơn, hệ thống phải từ chối thay vì suy đoán."
+            />
+          }
+        />
+        <Route
+          path="/pharmacist/reports"
+          element={
+            <PharmacistFeaturePage
+              eyebrow="UC009 · UC011"
+              title="Báo cáo"
+              description="Dược sĩ xem các báo cáo phục vụ nghiệp vụ như tồn kho, thuốc tồn thấp, thuốc sắp hết hạn và báo cáo AI theo phạm vi được phân quyền."
+              backendStatus="Chờ UC009/UC011"
+            />
+          }
+        />
+        <Route
+          path="/pharmacist/profile"
+          element={
+            <PharmacistFeaturePage
+              eyebrow="Tài khoản"
+              title="Hồ sơ"
+              description="Khu vực thông tin tài khoản Dược sĩ, đổi mật khẩu và các thiết lập hồ sơ được hệ thống hỗ trợ."
+              backendStatus="Chờ profile API"
             />
           }
         />
