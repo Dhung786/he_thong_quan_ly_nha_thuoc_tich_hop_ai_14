@@ -62,3 +62,34 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build
+
+  backup-restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate backup scripts
+        run: python -m py_compile scripts/backup_db.py scripts/restore_db.py
+      - name: Start disposable PostgreSQL
+        run: docker compose up -d --wait postgres
+      - name: Create backup probe
+        run: |
+          docker compose exec -T postgres sh -c \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE TABLE backup_restore_probe (value integer NOT NULL); INSERT INTO backup_restore_probe VALUES (42);"'
+      - name: Create database backup
+        run: python scripts/backup_db.py --output /tmp/warehouse_ai_ci.dump
+      - name: Delete probe after backup
+        run: |
+          docker compose exec -T postgres sh -c \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "DROP TABLE backup_restore_probe;"'
+      - name: Restore database backup
+        run: python scripts/restore_db.py /tmp/warehouse_ai_ci.dump --confirm-restore
+      - name: Verify restored probe
+        run: |
+          value="$(docker compose exec -T postgres sh -c 'psql -At -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT value FROM backup_restore_probe;"')"
+          test "$value" = "42"
+      - name: Tear down disposable PostgreSQL
+        if: always()
+        run: docker compose down -v
