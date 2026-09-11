@@ -1,16 +1,17 @@
 import { NavLink } from "react-router-dom";
 
 const managerNavItems = [
-  { to: "/dashboard", icon: "📊", label: "Tổng quan / Dashboard", end: true },
-  { to: "/catalog", icon: "💊", label: "Quản lý thuốc" },
-  { to: "/manager/imports", icon: "📥", label: "Quản lý nhập thuốc" },
-  { to: "/manager/sales", icon: "🧾", label: "Bán thuốc" },
-  { to: "/manager/inventory", icon: "📦", label: "Tồn kho" },
-  { to: "/manager/expiry", icon: "⏳", label: "Hạn sử dụng" },
-  { to: "/manager/lookup", icon: "🔎", label: "Tra cứu thuốc" },
-  { to: "/manager/reports", icon: "📈", label: "Báo cáo - Thống kê" },
-  { to: "/manager/ai", icon: "🤖", label: "Trợ lý AI" },
+  { to: "/dashboard", icon: "📊", label: "Tổng quan / Dashboard", uc: "UC001", end: true },
+  { to: "/catalog", icon: "💊", label: "Quản lý thuốc", uc: "UC002" },
+  { to: "/manager/imports", icon: "📥", label: "Quản lý nhập thuốc", uc: "UC003 · UC005" },
+  { to: "/manager/sales", icon: "🧾", label: "Bán thuốc", uc: "UC004" },
+  { to: "/manager/inventory", icon: "📦", label: "Tồn kho", uc: "UC006" },
+  { to: "/manager/expiry", icon: "⏳", label: "Hạn sử dụng", uc: "UC008" },
+  { to: "/manager/lookup", icon: "🔎", label: "Tra cứu thuốc", uc: "UC007" },
+  { to: "/manager/reports", icon: "📈", label: "Báo cáo - Thống kê", uc: "UC009" },
+  { to: "/manager/ai", icon: "🤖", label: "Trợ lý AI", uc: "UC010–UC013" },
   { to: "/manager/users", icon: "👥", label: "Tài khoản / Phân quyền" },
+  { to: "/use-cases", icon: "📋", label: "Use Cases SRS", uc: "UC001–UC013" },
 ];
 
 export function ManagerSidebar() {
@@ -22,9 +23,7 @@ export function ManagerSidebar() {
         </div>
         <div>
           <p className="text-xl font-black tracking-tight text-sky-400">MediCare AI</p>
-          <p className="mt-0.5 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
-            Manager Workspace
-          </p>
+          <p className="mt-0.5 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">Manager Workspace</p>
         </div>
       </div>
 
@@ -43,23 +42,12 @@ export function ManagerSidebar() {
               }
             >
               <span className="w-5 text-center text-base" aria-hidden="true">{item.icon}</span>
-              <span>{index + 1}. {item.label}</span>
+              <span className="min-w-0 flex-1">{index < 10 ? `${index + 1}. ` : ""}{item.label}</span>
+              {item.uc && <span className="shrink-0 rounded-md bg-slate-950/40 px-1.5 py-0.5 text-[9px] font-bold text-sky-400">{item.uc}</span>}
             </NavLink>
-            {index === 0 && (
-              <div className="ml-12 mt-1 space-y-1 text-[11px] text-slate-600">
-                <p>Doanh thu</p><p>Tổng số thuốc</p><p>Thuốc tồn thấp</p><p>Thuốc sắp hết hạn</p>
-              </div>
-            )}
-            {index === 1 && (
-              <div className="ml-12 mt-1 space-y-1 text-[11px] text-slate-600">
-                <p>Danh sách thuốc</p><p>Nhóm thuốc</p><p>Đơn vị tính</p>
-              </div>
-            )}
-            {index === 2 && (
-              <div className="ml-12 mt-1 space-y-1 text-[11px] text-slate-600">
-                <p>Danh sách lô nhập</p><p>Thêm lô nhập</p><p>Nhà cung cấp</p>
-              </div>
-            )}
+            {index === 0 && <div className="ml-12 mt-1 space-y-1 text-[11px] text-slate-600"><p>Doanh thu</p><p>Tổng số thuốc</p><p>Thuốc tồn thấp</p><p>Thuốc sắp hết hạn</p></div>}
+            {index === 1 && <div className="ml-12 mt-1 space-y-1 text-[11px] text-slate-600"><p>Danh sách thuốc</p><p>Nhóm thuốc</p><p>Đơn vị tính</p></div>}
+            {index === 2 && <div className="ml-12 mt-1 space-y-1 text-[11px] text-slate-600"><p>Danh sách lô nhập</p><p>Thêm lô nhập</p><p>Nhà cung cấp</p></div>}
             {index === 3 && <p className="ml-12 mt-1 text-[11px] text-slate-600">Bán thuốc · Hóa đơn</p>}
             {index === 4 && <p className="ml-12 mt-1 text-[11px] text-slate-600">Danh sách tồn kho · Cảnh báo tồn thấp</p>}
             {index === 5 && <p className="ml-12 mt-1 text-[11px] text-slate-600">Thuốc sắp hết hạn · Thuốc đã hết hạn</p>}
