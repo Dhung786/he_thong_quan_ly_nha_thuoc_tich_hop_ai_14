@@ -14,6 +14,24 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
+function formatApiError(error: ApiError): string {
+  let message: string;
+  if (error.status === 401) {
+    message = "Tên đăng nhập hoặc mật khẩu không đúng.";
+  } else if (error.status === 422) {
+    message = "Dữ liệu đăng nhập không hợp lệ.";
+  } else if (error.status === 503) {
+    message = "Dịch vụ hiện chưa sẵn sàng. Vui lòng thử lại sau.";
+  } else {
+    message = "Không thể kết nối hệ thống. Vui lòng thử lại.";
+  }
+
+  if (error.correlationId) {
+    return `${message} Mã hỗ trợ: ${error.correlationId}`;
+  }
+  return message;
+}
+
 export function LoginPage() {
   const auth = useAuth();
   const navigate = useNavigate();
@@ -34,8 +52,8 @@ export function LoginPage() {
       await auth.login(values);
       navigate("/dashboard", { replace: true });
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        setSubmitError("Tên đăng nhập hoặc mật khẩu không đúng.");
+      if (error instanceof ApiError) {
+        setSubmitError(formatApiError(error));
       } else {
         setSubmitError("Không thể kết nối hệ thống. Vui lòng thử lại.");
       }
