@@ -46,14 +46,25 @@ Màn hình có hai trường:
 - Tên đăng nhập.
 - Mật khẩu.
 
-Với cấu hình Docker Compose development mặc định, tài khoản demo local là:
+Với cấu hình Docker Compose development mặc định, có ba tài khoản demo local:
 
 ```text
+ADMIN
 Tên đăng nhập: admin
 Mật khẩu: Admin123!ChangeMe
+
+WAREHOUSE_KEEPER
+Tên đăng nhập: keeper
+Mật khẩu: Keeper123!ChangeMe
+
+ACCOUNTANT
+Tên đăng nhập: accountant
+Mật khẩu: Accountant123!ChangeMe
 ```
 
-Đây là credential **development-only**, có thể override bằng biến môi trường `SEED_ADMIN_USERNAME` và `SEED_ADMIN_PASSWORD`.
+Đây là credential **development-only**. Có thể override bằng các cặp biến môi trường `SEED_ADMIN_*`, `SEED_WAREHOUSE_KEEPER_*` và `SEED_ACCOUNTANT_*`.
+
+Ba tài khoản trên chỉ chứng minh authentication và role identity hoạt động. User Guide **không suy diễn quyền nghiệp vụ** cho từng role khi Permission Matrix `ROLE × FR × ACTION × API` chưa được phê duyệt.
 
 Bấm **Đăng nhập**. Khi thành công, hệ thống chuyển tới:
 
@@ -82,6 +93,8 @@ Frontend có cơ chế:
 - tránh chạy nhiều refresh rotation đồng thời trong cùng provider instance;
 - xóa phiên local nếu refresh thất bại.
 
+Refresh token bị rotate khi refresh thành công. Logout revoke refresh token được gửi lên backend; access token JWT đã phát hành vẫn tuân theo thời hạn hết hạn của token.
+
 ## 4. Dashboard
 
 Dashboard hiện có sidebar bên trái và vùng tổng quan ở bên phải.
@@ -90,7 +103,7 @@ Dashboard hiện có sidebar bên trái và vùng tổng quan ở bên phải.
 
 Sidebar hiển thị:
 
-- role hiện tại, ví dụ `ADMIN`;
+- role hiện tại, ví dụ `ADMIN`, `WAREHOUSE_KEEPER` hoặc `ACCOUNTANT`;
 - username;
 - user ID;
 - nút **Đăng xuất**.
@@ -169,12 +182,14 @@ Một demo foundation hiện tại có thể thực hiện theo thứ tự:
 
 1. Chạy `docker compose up -d --build`.
 2. Mở `/login`.
-3. Đăng nhập bằng tài khoản development local.
-4. Xác nhận `/dashboard` hiển thị username/role thật.
+3. Lần lượt đăng nhập bằng `admin`, `keeper`, `accountant`.
+4. Với mỗi tài khoản, xác nhận `/dashboard` hiển thị đúng username và role từ backend.
 5. Xác nhận Core/PostgreSQL đều `ok`.
 6. Xem migration revision và trạng thái AI provider.
 7. Đăng xuất.
 8. Xác nhận quay lại trang login.
+
+Việc ba role đăng nhập được không đồng nghĩa các quyền nghiệp vụ đã VERIFIED.
 
 ## 8. Khi gặp lỗi
 
