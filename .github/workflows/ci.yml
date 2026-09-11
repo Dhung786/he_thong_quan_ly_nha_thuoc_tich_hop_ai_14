@@ -33,8 +33,8 @@ jobs:
       SEED_MANAGER_PASSWORD: CI_MANAGER_ONLY_CHANGE_ME_123!
       SEED_PHARMACIST_USERNAME: ci-pharmacist
       SEED_PHARMACIST_PASSWORD: CI_PHARMACIST_ONLY_CHANGE_ME_123!
-      SEED_CASHIER_USERNAME: ci-cashier
-      SEED_CASHIER_PASSWORD: CI_CASHIER_ONLY_CHANGE_ME_123!
+      SEED_CUSTOMER_USERNAME: ci-customer
+      SEED_CUSTOMER_PASSWORD: CI_CUSTOMER_ONLY_CHANGE_ME_123!
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -121,7 +121,7 @@ jobs:
               body = json.load(response)
           assert body["core"] == "ok"
           assert body["database"] == "ok"
-          assert body["migration"] == "0004_pharmacy_srs_baseline"
+          assert body["migration"] == "0005_customer_role"
           PY
       - name: Verify manager authentication and UC002 catalog flow
         run: |
@@ -199,6 +199,50 @@ jobs:
           ) as response:
               assert response.status == 204
           PY
+      - name: Verify customer authentication baseline
+        run: |
+          python - <<'PY'
+          import json
+          import urllib.request
+          import urllib.error
+
+          def request(path, *, method="GET", body=None, token=None):
+              headers = {}
+              data = None
+              if body is not None:
+                  headers["Content-Type"] = "application/json"
+                  data = json.dumps(body).encode()
+              if token is not None:
+                  headers["Authorization"] = f"Bearer {token}"
+              req = urllib.request.Request(
+                  f"http://localhost:8000{path}",
+                  data=data,
+                  headers=headers,
+                  method=method,
+              )
+              return urllib.request.urlopen(req, timeout=10)
+
+          with request(
+              "/api/v1/auth/login",
+              method="POST",
+              body={"username": "customer", "password": "Customer123!ChangeMe"},
+          ) as response:
+              assert response.status == 200
+              tokens = json.load(response)
+
+          with request("/api/v1/auth/me", token=tokens["access_token"]) as response:
+              assert response.status == 200
+              user = json.load(response)
+          assert user["username"] == "customer"
+          assert user["role"] == "CUSTOMER"
+
+          try:
+              request("/api/v1/catalog/groups", token=tokens["access_token"])
+          except urllib.error.HTTPError as exc:
+              assert exc.code == 403
+          else:
+              raise AssertionError("CUSTOMER must not inherit UC002 manager permission")
+          PY
       - name: Verify frontend is serving
         run: |
           python - <<'PY'
@@ -212,7 +256,7 @@ jobs:
       - name: Verify database migration table
         run: |
           revision="$(docker compose exec -T postgres sh -c 'psql -At -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT version_num FROM alembic_version;"')"
-          test "$revision" = "0004_pharmacy_srs_baseline"
+          test "$revision" = "0005_customer_role"
       - name: Show service logs on failure
         if: failure()
         run: docker compose logs --no-color

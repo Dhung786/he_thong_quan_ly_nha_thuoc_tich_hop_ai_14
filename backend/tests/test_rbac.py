@@ -24,7 +24,7 @@ def test_enforce_roles_allows_matching_role() -> None:
 
 
 def test_enforce_roles_returns_403_for_authenticated_wrong_role() -> None:
-    user = make_user("CASHIER")
+    user = make_user("CUSTOMER")
     with pytest.raises(HTTPException) as exc_info:
         enforce_roles(user, {"MANAGER"})
 

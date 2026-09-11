@@ -8,8 +8,8 @@ SEED_ENV_VARS = (
     "SEED_MANAGER_PASSWORD",
     "SEED_PHARMACIST_USERNAME",
     "SEED_PHARMACIST_PASSWORD",
-    "SEED_CASHIER_USERNAME",
-    "SEED_CASHIER_PASSWORD",
+    "SEED_CUSTOMER_USERNAME",
+    "SEED_CUSTOMER_PASSWORD",
 )
 
 
@@ -53,8 +53,8 @@ def test_production_accepts_non_placeholder_value() -> None:
         {"seed_manager_password": "password-only"},
         {"seed_pharmacist_username": "pharmacist-only"},
         {"seed_pharmacist_password": "password-only"},
-        {"seed_cashier_username": "cashier-only"},
-        {"seed_cashier_password": "password-only"},
+        {"seed_customer_username": "customer-only"},
+        {"seed_customer_password": "password-only"},
     ],
 )
 def test_seed_credentials_must_be_configured_in_pairs(
@@ -73,10 +73,10 @@ def test_all_three_seed_role_pairs_are_accepted(monkeypatch: pytest.MonkeyPatch)
         seed_manager_password="manager-password",
         seed_pharmacist_username="pharmacist",
         seed_pharmacist_password="pharmacist-password",
-        seed_cashier_username="cashier",
-        seed_cashier_password="cashier-password",
+        seed_customer_username="customer",
+        seed_customer_password="customer-password",
     )
 
     assert settings.seed_manager_username == "manager"
     assert settings.seed_pharmacist_username == "pharmacist"
-    assert settings.seed_cashier_username == "cashier"
+    assert settings.seed_customer_username == "customer"

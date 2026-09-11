@@ -7,7 +7,7 @@ import { healthRequest } from "../lib/api";
 const roleLabels: Record<string, string> = {
   MANAGER: "Quản lý",
   PHARMACIST: "Dược sĩ",
-  CASHIER: "Thu ngân",
+  CUSTOMER: "Khách hàng",
 };
 
 const plannedModules = [
@@ -67,7 +67,7 @@ export function DashboardPage() {
           ) : (
             <div
               className="flex items-center justify-between rounded-xl px-4 py-3 text-sm text-slate-500"
-              title="SRS UC002 chỉ định tác nhân Quản lý"
+              title="UC002 hiện chỉ được phê duyệt cho vai trò Quản lý"
             >
               <span>UC002 · Danh mục thuốc</span>
               <span className="text-[10px] uppercase tracking-wider">Không có quyền</span>
@@ -100,11 +100,11 @@ export function DashboardPage() {
       <main className="p-5 sm:p-8 lg:p-10">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm text-slate-400">SRS V1.0 · Nhóm 14</p>
+            <p className="text-sm text-slate-400">SRS V1.0 + quyết định người dùng · Nhóm 14</p>
             <h2 className="mt-1 text-3xl font-bold">Hệ thống quản lý nhà thuốc có tích hợp AI</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
-              Baseline nghiệp vụ đã chuyển sang SRS nhà thuốc. UC001 xác thực đang hoạt động và
-              UC002 quản lý danh mục thuốc đã được mở cho vai trò Quản lý.
+              Baseline hiện dùng ba vai trò Quản lý, Dược sĩ và Khách hàng. UC001 xác thực đang
+              hoạt động và UC002 quản lý danh mục thuốc được mở cho vai trò Quản lý.
             </p>
           </div>
           <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
@@ -140,24 +140,24 @@ export function DashboardPage() {
                 <h3 className="mt-1 text-xl font-semibold">UC001 + UC002</h3>
               </div>
               <span className="rounded-full border border-emerald-800/70 bg-emerald-950/40 px-3 py-1 text-xs font-semibold text-emerald-300">
-                PHARMACY SRS BASELINE
+                PHARMACY BASELINE
               </span>
             </div>
             <div className="mt-6 space-y-3 text-sm text-slate-300">
               <CheckRow text="UC001: đăng nhập, xác định vai trò và phiên đăng nhập" />
-              <CheckRow text="Ba vai trò: Quản lý, Dược sĩ, Thu ngân" />
+              <CheckRow text="Ba vai trò: Quản lý, Dược sĩ, Khách hàng" />
               <CheckRow text="UC002: thêm, sửa, xóa, tra cứu thuốc" />
               <CheckRow text="UC002: quản lý nhóm thuốc và đơn vị tính" />
             </div>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <p className="text-sm text-slate-500">Điểm cần giữ nguyên theo SRS</p>
-            <h3 className="mt-1 text-xl font-semibold">Không tự suy diễn yêu cầu</h3>
+            <p className="text-sm text-slate-500">Điểm cần giữ nguyên</p>
+            <h3 className="mt-1 text-xl font-semibold">Không tự suy diễn quyền Khách hàng</h3>
             <p className="mt-4 text-sm leading-6 text-slate-400">
-              Các trường dữ liệu chưa được SRS định nghĩa cụ thể sẽ chưa được thêm. Những chỗ
-              mapping tác nhân còn mâu thuẫn trong SRS sẽ được đánh dấu để xử lý ở đúng Use Case,
-              thay vì tự chọn quyền.
+              Khách hàng không tự động kế thừa quyền cũ của Thu ngân. Các quyền mua thuốc,
+              tra cứu, hóa đơn hoặc chức năng khác chỉ được mở sau khi có quyết định nghiệp vụ
+              rõ ràng và được backend enforce.
             </p>
           </div>
         </section>

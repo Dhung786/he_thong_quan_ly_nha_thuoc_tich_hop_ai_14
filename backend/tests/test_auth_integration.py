@@ -100,7 +100,7 @@ async def test_login_refresh_rotation_logout_and_me() -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("role_name", ["MANAGER", "PHARMACIST", "CASHIER"])
+@pytest.mark.parametrize("role_name", ["MANAGER", "PHARMACIST", "CUSTOMER"])
 async def test_login_and_me_preserve_each_supported_role(role_name: str) -> None:
     username = f"role-{role_name.lower()}-{uuid4().hex[:8]}"
     password = "RoleAuthTest-123!"
