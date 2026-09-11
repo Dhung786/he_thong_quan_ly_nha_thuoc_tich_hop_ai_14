@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { FormEvent, useState } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../auth/auth-context";
@@ -303,8 +303,8 @@ function DashboardCard({
 }: {
   title: string;
   icon: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
+  action?: ReactNode;
+  children: ReactNode;
 }) {
   return (
     <section className="rounded-2xl border border-slate-700/70 bg-[#102238] p-4 shadow-xl shadow-slate-950/10 sm:p-5">
