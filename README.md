@@ -1,34 +1,49 @@
 # Hệ thống quản lý nhà thuốc có tích hợp AI — Nhóm 14
 
-Repository này triển khai theo **Đặc tả yêu cầu ứng dụng V1.0 — Hệ thống quản lý nhà thuốc có tích hợp AI, Nhóm 14**. Baseline kho cũ đã được thay thế trên branch `phase-pharmacy-srs-baseline`.
+Repository triển khai **Hệ thống quản lý nhà thuốc có tích hợp AI** theo SRS V1.0 của Nhóm 14 và các quyết định người dùng phê duyệt sau SRS.
 
-## Trạng thái hiện tại
+## Baseline hiện tại
 
-`IMPLEMENTED / NOT YET VERIFIED` cho baseline mới cho tới khi GitHub Actions của branch/PR này chạy xanh.
+Quyết định mới nhất của người dùng thay actor `Thu ngân` bằng `Khách hàng`. Ba role kỹ thuật chính thức hiện tại là:
 
-Đã triển khai:
+| Vai trò | Mã kỹ thuật |
+| --- | --- |
+| Quản lý | `MANAGER` |
+| Dược sĩ | `PHARMACIST` |
+| Khách hàng | `CUSTOMER` |
 
-- UC001 — Đăng nhập và phân quyền.
-- Ba vai trò nghiệp vụ: Quản lý (`MANAGER`), Dược sĩ (`PHARMACIST`), Thu ngân (`CASHIER`).
-- JWT access token, refresh rotation, logout, audit và correlation ID từ foundation kỹ thuật trước đó.
-- UC002 — Quản lý danh mục thuốc dành cho Quản lý:
+`CUSTOMER` **không tự động kế thừa quyền nghiệp vụ cũ của Thu ngân**. Ngoài UC001 đăng nhập/phân quyền, quyền của Khách hàng chỉ được mở khi có quyết định nghiệp vụ rõ ràng.
+
+## Trạng thái triển khai
+
+Đã có:
+
+- UC001 — đăng nhập, JWT access token, refresh rotation, logout, `/me`, audit và correlation ID.
+- UC002 — Quản lý danh mục thuốc cho `MANAGER`:
   - thêm/sửa/xóa/tra cứu thuốc;
   - quản lý nhóm thuốc;
   - quản lý đơn vị tính;
   - mã thuốc không được trùng;
   - nhóm thuốc/đơn vị tính đang được thuốc sử dụng không thể xóa.
-- PostgreSQL + Alembic migration `0004_pharmacy_srs_baseline`.
+- PostgreSQL + Alembic.
 - React UI `/catalog` kết nối backend thật.
+- Docker Compose + GitHub Actions CI.
 
-Chưa triển khai: UC003–UC013. Không tự thêm trường nghiệp vụ mà SRS chưa định nghĩa cụ thể.
+Chưa triển khai đầy đủ: UC003–UC013. Các điểm nghiệp vụ còn mâu thuẫn hoặc chưa có quyết định không được tự suy diễn.
 
-## Quy ước role kỹ thuật
+## Migration
 
-| SRS | Mã kỹ thuật |
-| --- | --- |
-| Quản lý | `MANAGER` |
-| Dược sĩ | `PHARMACIST` |
-| Thu ngân | `CASHIER` |
+Migration hiện tại:
+
+```text
+0001_foundation_metadata
+0002_auth_foundation
+0003_idempotency_infrastructure
+0004_pharmacy_srs_baseline
+0005_customer_role
+```
+
+`0005_customer_role` đổi role `CASHIER` thành `CUSTOMER` mà không sửa migration lịch sử đã áp dụng.
 
 ## Tài khoản demo local
 
@@ -43,9 +58,9 @@ Dược sĩ
 username: pharmacist
 password: Pharmacist123!ChangeMe
 
-Thu ngân
-username: cashier
-password: Cashier123!ChangeMe
+Khách hàng
+username: customer
+password: Customer123!ChangeMe
 ```
 
 Các giá trị trên chỉ dành cho development và có thể override bằng biến môi trường.
@@ -73,12 +88,15 @@ GET/POST       /api/v1/catalog/medicines
 GET/PUT/DELETE /api/v1/catalog/medicines/{id}
 ```
 
-Các endpoint UC002 yêu cầu role `MANAGER` theo đặc tả UC002.
+Các endpoint UC002 yêu cầu role `MANAGER`.
 
-## Điểm chưa rõ trong chính SRS
+## Quy tắc không tự suy diễn
 
-SRS có một số mapping tác nhân chưa thống nhất, ví dụ phần mô tả Thu ngân nói thực hiện bán thuốc/lập hóa đơn nhưng bảng mapping Use Case không gán UC004 cho Thu ngân; UC005 cũng có khác biệt giữa bảng mapping và phần đặc tả chi tiết. Những điểm này được giữ ở trạng thái chưa quyết định, không tự suy diễn quyền cho các Use Case liên quan.
+Các quyết định vẫn phải được chốt riêng trước khi code module tương ứng, ví dụ:
 
-## Kiểm thử / CI
+- actor thực hiện UC004 bán thuốc và lập hóa đơn;
+- quy tắc chọn lô khi bán (FEFO/FIFO/chọn tay);
+- số ngày cảnh báo thuốc sắp hết hạn;
+- quyền nghiệp vụ cụ thể của `CUSTOMER`.
 
-CI kiểm tra backend lint/typecheck/migration/seed/pytest, frontend lint/typecheck/test/build, backup/restore và clean Docker Compose smoke test. Compose smoke test của baseline mới còn kiểm tra đăng nhập Quản lý và tạo dữ liệu UC002 thật.
+CI chỉ được coi là VERIFIED khi workflow thực tế chạy xanh trên commit tương ứng.
