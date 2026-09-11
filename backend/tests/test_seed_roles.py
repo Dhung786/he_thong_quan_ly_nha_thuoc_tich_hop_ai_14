@@ -15,15 +15,15 @@ async def test_seed_creates_idempotent_demo_users_for_all_roles(monkeypatch) -> 
     credentials = (
         ("MANAGER", f"seed-manager-{suffix}", "SeedManager123!"),
         ("PHARMACIST", f"seed-pharmacist-{suffix}", "SeedPharmacist123!"),
-        ("CASHIER", f"seed-cashier-{suffix}", "SeedCashier123!"),
+        ("CUSTOMER", f"seed-customer-{suffix}", "SeedCustomer123!"),
     )
 
     monkeypatch.setattr(seed_module.settings, "seed_manager_username", credentials[0][1])
     monkeypatch.setattr(seed_module.settings, "seed_manager_password", credentials[0][2])
     monkeypatch.setattr(seed_module.settings, "seed_pharmacist_username", credentials[1][1])
     monkeypatch.setattr(seed_module.settings, "seed_pharmacist_password", credentials[1][2])
-    monkeypatch.setattr(seed_module.settings, "seed_cashier_username", credentials[2][1])
-    monkeypatch.setattr(seed_module.settings, "seed_cashier_password", credentials[2][2])
+    monkeypatch.setattr(seed_module.settings, "seed_customer_username", credentials[2][1])
+    monkeypatch.setattr(seed_module.settings, "seed_customer_password", credentials[2][2])
 
     await seed_module.seed()
     await seed_module.seed()
