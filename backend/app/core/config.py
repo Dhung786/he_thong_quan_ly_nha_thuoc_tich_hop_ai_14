@@ -25,16 +25,35 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
     seed_admin_username: str | None = None
     seed_admin_password: str | None = None
+    seed_warehouse_keeper_username: str | None = None
+    seed_warehouse_keeper_password: str | None = None
+    seed_accountant_username: str | None = None
+    seed_accountant_password: str | None = None
     cors_origins: list[str] = ["http://localhost:5173"]
     ai_provider: str = "disabled"
 
     @model_validator(mode="after")
-    def reject_insecure_production_jwt_placeholder(self) -> Self:
+    def validate_security_and_seed_configuration(self) -> Self:
         if (
             self.app_env.strip().lower() == "production"
             and self.jwt_secret in INSECURE_JWT_PLACEHOLDERS
         ):
             raise ValueError("Production JWT_SECRET must not use a development placeholder")
+
+        seed_pairs = (
+            ("ADMIN", self.seed_admin_username, self.seed_admin_password),
+            (
+                "WAREHOUSE_KEEPER",
+                self.seed_warehouse_keeper_username,
+                self.seed_warehouse_keeper_password,
+            ),
+            ("ACCOUNTANT", self.seed_accountant_username, self.seed_accountant_password),
+        )
+        for role_name, username, password in seed_pairs:
+            if bool(username) != bool(password):
+                raise ValueError(
+                    f"Seed username/password for {role_name} must be provided together"
+                )
         return self
 
 
