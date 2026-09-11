@@ -165,7 +165,7 @@ async def update_user_role(
         )
     role = await _get_role(session, payload.role)
     previous = user.role.name
-    user.role_id = role.id
+    user.role = role
     await _revoke_refresh_tokens(session, user.id)
     record_audit_event(
         session,
