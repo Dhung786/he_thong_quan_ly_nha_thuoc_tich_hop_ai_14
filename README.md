@@ -44,21 +44,33 @@ Các địa chỉ local:
 
 ### Tài khoản development local
 
-Docker Compose development mặc định seed tài khoản:
+Docker Compose development mặc định seed ba tài khoản demo, tương ứng đúng ba role được Master Prompt quy định:
 
 ```text
+ADMIN
 username: admin
 password: Admin123!ChangeMe
+
+WAREHOUSE_KEEPER
+username: keeper
+password: Keeper123!ChangeMe
+
+ACCOUNTANT
+username: accountant
+password: Accountant123!ChangeMe
 ```
 
-Đây là **development-only default**, không phải production credential. Có thể override bằng environment variables:
+Đây là **development-only defaults**, không phải production credentials. Có thể override bằng environment variables:
 
 ```text
-SEED_ADMIN_USERNAME=<local-username>
-SEED_ADMIN_PASSWORD=<local-password>
+SEED_ADMIN_USERNAME / SEED_ADMIN_PASSWORD
+SEED_WAREHOUSE_KEEPER_USERNAME / SEED_WAREHOUSE_KEEPER_PASSWORD
+SEED_ACCOUNTANT_USERNAME / SEED_ACCOUNTANT_PASSWORD
 ```
 
 Production/shared environment phải dùng secret riêng và không commit `.env`.
+
+Ba role có thể đăng nhập và backend trả đúng role qua `/api/v1/auth/me`. Mapping quyền nghiệp vụ `ROLE × FR × ACTION × API` vẫn **chưa được tự suy diễn** khi Permission Matrix chính thức còn thiếu.
 
 ## Cấu hình môi trường
 
@@ -81,7 +93,7 @@ Các endpoint hiện đang triển khai:
 - `GET /api/v1/status`
 - `GET /health`
 
-Access token dùng JWT. Refresh token là opaque token; database chỉ lưu token hash. Refresh token cũ bị revoke khi rotation thành công.
+Access token dùng JWT. Refresh token là opaque token; database chỉ lưu token hash. Refresh token cũ bị revoke khi rotation thành công. Logout revoke refresh token được gửi lên; access token đã phát hành vẫn hết hạn theo TTL của JWT.
 
 Chi tiết contract và error model: [`docs/API.md`](docs/API.md).
 
@@ -126,6 +138,8 @@ Migration hiện tại:
 - `0002_auth_foundation`
 - `0003_idempotency_infrastructure`
 
+Seed hiện tạo ba role bắt buộc và, khi các cặp biến môi trường tương ứng được cấu hình, tạo demo user idempotent cho từng role. Nếu username đã tồn tại nhưng thuộc role khác, seed fail thay vì âm thầm đổi quyền.
+
 Các bảng kỹ thuật phục vụ authentication/audit/idempotency là **Technical Implementation Extension**; domain schema nghiệp vụ chính thức chỉ được bổ sung khi có nguồn đủ mạnh.
 
 ## Kiểm thử
@@ -157,9 +171,10 @@ CI hiện còn kiểm tra:
 
 - clean Docker Compose startup;
 - backend health + migration revision;
-- seeded login → `/me` → logout;
+- authentication/refresh/logout foundation;
+- ba role được seed và authenticate đúng role trong backend tests;
 - PostgreSQL backup → delete probe → restore → verify;
-- frontend serving.
+- frontend serving và standalone Nginx SPA routes.
 
 > `IMPLEMENTED`, `VERIFIED` và `DONE` là ba trạng thái khác nhau. Không gọi toàn hệ thống DONE khi business modules/traceability bắt buộc còn thiếu.
 
