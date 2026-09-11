@@ -1,0 +1,51 @@
+name: Frontend image smoke
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  frontend-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build frontend runtime image
+        run: docker build -t warehouse-ai-frontend-smoke ./frontend
+      - name: Start frontend runtime image
+        run: docker run -d --name warehouse-ai-frontend-smoke -p 5173:5173 warehouse-ai-frontend-smoke
+      - name: Wait for frontend health
+        run: |
+          python - <<'PY'
+          import time
+          import urllib.error
+          import urllib.request
+
+          deadline = time.time() + 30
+          while time.time() < deadline:
+              try:
+                  with urllib.request.urlopen("http://localhost:5173/healthz", timeout=2) as response:
+                      if response.status == 200:
+                          break
+              except (urllib.error.URLError, TimeoutError):
+                  time.sleep(1)
+          else:
+              raise SystemExit("frontend health endpoint did not become ready")
+          PY
+      - name: Verify SPA routes
+        run: |
+          python - <<'PY'
+          import urllib.request
+
+          for path in ("/", "/login", "/dashboard"):
+              with urllib.request.urlopen(f"http://localhost:5173{path}", timeout=5) as response:
+                  body = response.read()
+                  assert response.status == 200
+                  assert b'<div id="root"></div>' in body
+          PY
+      - name: Show frontend logs on failure
+        if: failure()
+        run: docker logs warehouse-ai-frontend-smoke
+      - name: Remove frontend container
+        if: always()
+        run: docker rm -f warehouse-ai-frontend-smoke || true
