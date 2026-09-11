@@ -53,21 +53,21 @@ async def seed() -> None:
 
         await _seed_user(
             session,
-            role=roles["ADMIN"],
-            username=settings.seed_admin_username,
-            password=settings.seed_admin_password,
+            role=roles["MANAGER"],
+            username=settings.seed_manager_username,
+            password=settings.seed_manager_password,
         )
         await _seed_user(
             session,
-            role=roles["WAREHOUSE_KEEPER"],
-            username=settings.seed_warehouse_keeper_username,
-            password=settings.seed_warehouse_keeper_password,
+            role=roles["PHARMACIST"],
+            username=settings.seed_pharmacist_username,
+            password=settings.seed_pharmacist_password,
         )
         await _seed_user(
             session,
-            role=roles["ACCOUNTANT"],
-            username=settings.seed_accountant_username,
-            password=settings.seed_accountant_password,
+            role=roles["CASHIER"],
+            username=settings.seed_cashier_username,
+            password=settings.seed_cashier_password,
         )
 
         metadata_result = await session.execute(
@@ -75,9 +75,9 @@ async def seed() -> None:
         )
         metadata: SystemMetadata | None = metadata_result.scalar_one_or_none()
         if metadata is None:
-            session.add(SystemMetadata(key="foundation_version", value="phase2a-v2"))
+            session.add(SystemMetadata(key="foundation_version", value="pharmacy-srs-v1"))
         else:
-            metadata.value = "phase2a-v2"
+            metadata.value = "pharmacy-srs-v1"
         await session.commit()
 
 
