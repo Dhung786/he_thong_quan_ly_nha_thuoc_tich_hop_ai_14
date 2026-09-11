@@ -3,6 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.auth import router as auth_router
 from app.core.config import settings
@@ -29,6 +30,16 @@ app.include_router(auth_router)
 def _correlation_id(request: Request) -> str:
     value = getattr(request.state, "correlation_id", "unavailable")
     return value if isinstance(value, str) else "unavailable"
+
+
+def _http_error_public_values(status_code: int) -> tuple[str, str]:
+    values = {
+        401: ("unauthorized", "Invalid or expired authentication"),
+        403: ("forbidden", "Insufficient permissions"),
+        404: ("not_found", "Resource not found"),
+        405: ("method_not_allowed", "Method not allowed"),
+    }
+    return values.get(status_code, ("http_error", "Request failed"))
 
 
 @app.exception_handler(RequestValidationError)
@@ -63,6 +74,38 @@ async def request_validation_error_handler(
             "message": "Request validation failed",
             "correlation_id": correlation_id,
             "details": safe_errors,
+        },
+    )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(
+    request: Request,
+    exc: StarletteHTTPException,
+) -> JSONResponse:
+    correlation_id = _correlation_id(request)
+    error_code, public_message = _http_error_public_values(exc.status_code)
+    headers = dict(exc.headers or {})
+    headers["X-Correlation-ID"] = correlation_id
+
+    application_logger.warning(
+        "HTTP request rejected",
+        extra={
+            "event": "http_request_rejected",
+            "correlation_id": correlation_id,
+            "path": request.url.path,
+            "status_code": exc.status_code,
+            "error_code": error_code,
+        },
+    )
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        headers=headers,
+        content={
+            "error": error_code,
+            "message": public_message,
+            "correlation_id": correlation_id,
         },
     )
 
