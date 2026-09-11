@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from contextvars import ContextVar, Token
-from datetime import UTC, datetime
 import json
 import logging
 import sys
+from contextvars import ContextVar, Token
+from datetime import UTC, datetime
 from typing import Any
-
 
 APP_LOGGER_NAME = "warehouse_ai"
 _correlation_id: ContextVar[str | None] = ContextVar("correlation_id", default=None)
