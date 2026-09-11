@@ -1,30 +1,20 @@
-# User Guide — Giao diện hiện tại
+# User Guide — Pharmacy AI hiện tại
 
-> Hướng dẫn này khớp với UI đang có trên branch `phase2b-core-inventory`. Các module nghiệp vụ được ghi **CHƯA MỞ** trong giao diện chưa có hướng dẫn thao tác vì chưa được triển khai.
+Hướng dẫn này khớp với baseline nhà thuốc dùng ba vai trò **Quản lý, Dược sĩ, Khách hàng**. Các chức năng chưa được phê duyệt hoặc chưa triển khai sẽ không được mô tả như đã hoạt động.
 
-## 1. Khởi động hệ thống local
+## 1. Khởi động local
 
-Yêu cầu:
-
-- Docker Desktop đang chạy.
-- Đã checkout branch `phase2b-core-inventory`.
-
-Từ thư mục repository:
+Yêu cầu: Docker Desktop/Docker Engine đang chạy.
 
 ```bash
 docker compose up -d --build
 ```
 
-Kiểm tra container:
+Kiểm tra:
 
 ```bash
 docker compose ps
-```
-
-Backend health:
-
-```text
-http://localhost:8000/health
+curl http://localhost:8000/health
 ```
 
 Frontend:
@@ -33,7 +23,13 @@ Frontend:
 http://localhost:5173
 ```
 
-## 2. Đăng nhập
+Swagger:
+
+```text
+http://localhost:8000/docs
+```
+
+## 2. Đăng nhập — UC001
 
 Mở:
 
@@ -41,178 +37,157 @@ Mở:
 http://localhost:5173/login
 ```
 
-Màn hình có hai trường:
-
-- Tên đăng nhập.
-- Mật khẩu.
-
-Với cấu hình Docker Compose development mặc định, có ba tài khoản demo local:
+Development defaults:
 
 ```text
-ADMIN
-Tên đăng nhập: admin
-Mật khẩu: Admin123!ChangeMe
+Quản lý
+username: manager
+password: Manager123!ChangeMe
 
-WAREHOUSE_KEEPER
-Tên đăng nhập: keeper
-Mật khẩu: Keeper123!ChangeMe
+Dược sĩ
+username: pharmacist
+password: Pharmacist123!ChangeMe
 
-ACCOUNTANT
-Tên đăng nhập: accountant
-Mật khẩu: Accountant123!ChangeMe
+Khách hàng
+username: customer
+password: Customer123!ChangeMe
 ```
 
-Đây là credential **development-only**. Có thể override bằng các cặp biến môi trường `SEED_ADMIN_*`, `SEED_WAREHOUSE_KEEPER_*` và `SEED_ACCOUNTANT_*`.
-
-Ba tài khoản trên chỉ chứng minh authentication và role identity hoạt động. User Guide **không suy diễn quyền nghiệp vụ** cho từng role khi Permission Matrix `ROLE × FR × ACTION × API` chưa được phê duyệt.
-
-Bấm **Đăng nhập**. Khi thành công, hệ thống chuyển tới:
+Đây là credential development-only. Có thể override bằng:
 
 ```text
-/dashboard
+SEED_MANAGER_USERNAME / SEED_MANAGER_PASSWORD
+SEED_PHARMACIST_USERNAME / SEED_PHARMACIST_PASSWORD
+SEED_CUSTOMER_USERNAME / SEED_CUSTOMER_PASSWORD
 ```
 
-### Khi đăng nhập lỗi
+Đăng nhập thành công chuyển tới `/dashboard`.
 
-- Sai username/password: giao diện báo thông tin đăng nhập không đúng.
-- Dữ liệu không hợp lệ: giao diện báo validation error.
-- Service unavailable: giao diện báo dịch vụ chưa sẵn sàng.
-- Nếu backend trả correlation ID, giao diện hiển thị `Mã hỗ trợ` để tra log.
+## 3. Vai trò hiện tại
 
-Frontend không hiển thị password, JWT hay refresh token trong thông báo lỗi.
+Backend sử dụng:
 
-## 3. Phiên đăng nhập
+```text
+MANAGER
+PHARMACIST
+CUSTOMER
+```
 
-Token của phiên hiện tại được lưu trong `sessionStorage`, tức là phạm vi theo tab/session trình duyệt thay vì lưu vĩnh viễn trong `localStorage`.
+Frontend hiển thị tương ứng:
 
-Frontend có cơ chế:
+- Quản lý;
+- Dược sĩ;
+- Khách hàng.
 
-- kiểm tra `/api/v1/auth/me` khi khôi phục phiên;
-- dùng refresh token nếu access token hết hạn;
-- lên lịch refresh access token trước thời điểm hết hạn;
-- tránh chạy nhiều refresh rotation đồng thời trong cùng provider instance;
-- xóa phiên local nếu refresh thất bại.
+Khách hàng **không tự động kế thừa quyền cũ của Thu ngân**. Việc đăng nhập được chỉ chứng minh UC001 hoạt động; các quyền nghiệp vụ phải được backend kiểm tra theo contract đã phê duyệt.
 
-Refresh token bị rotate khi refresh thành công. Logout revoke refresh token được gửi lên backend; access token JWT đã phát hành vẫn tuân theo thời hạn hết hạn của token.
+## 4. Phiên đăng nhập
 
-## 4. Dashboard
+Frontend dùng `sessionStorage` cho phiên trình duyệt hiện tại và có cơ chế:
 
-Dashboard hiện có sidebar bên trái và vùng tổng quan ở bên phải.
+- gọi `/api/v1/auth/me` để khôi phục user;
+- refresh access token bằng refresh token;
+- rotation refresh token;
+- logout revoke refresh token;
+- xóa local session nếu refresh thất bại.
 
-### Thông tin người dùng
+## 5. Dashboard
 
-Sidebar hiển thị:
+Dashboard hiển thị:
 
-- role hiện tại, ví dụ `ADMIN`, `WAREHOUSE_KEEPER` hoặc `ACCOUNTANT`;
 - username;
+- role;
 - user ID;
-- nút **Đăng xuất**.
+- Core application;
+- PostgreSQL;
+- Alembic migration;
+- trạng thái AI provider.
 
-Thông tin này lấy từ backend thật qua:
-
-```text
-GET /api/v1/auth/me
-```
-
-### System health
-
-Các card tổng quan lấy dữ liệu từ:
+Migration mới nhất của baseline role hiện tại là:
 
 ```text
-GET /health
+0005_customer_role
 ```
 
-Các mục hiện có:
+## 6. UC002 — Quản lý danh mục thuốc
 
-- **Core application** — trạng thái application.
-- **PostgreSQL** — trạng thái database.
-- **Migration** — Alembic revision đang applied.
-- **AI provider** — trạng thái provider AI optional.
+UC002 hiện chỉ mở cho **Quản lý (`MANAGER`)**.
 
-`Chưa cấu hình` ở AI provider không có nghĩa core application bị lỗi.
+Từ dashboard, Quản lý chọn:
 
-### Trạng thái triển khai
+```text
+UC002 · Danh mục thuốc
+```
 
-Dashboard hiển thị các foundation đã có như:
+Trang `/catalog` cho phép:
 
-- Authentication + refresh rotation + logout.
-- Audit + correlation ID + structured logging.
-- Idempotency + transaction boundary + PostgreSQL row lock.
-- Migration + backup/restore + clean Compose smoke test.
+- thêm/sửa/xóa nhóm thuốc;
+- thêm/sửa/xóa đơn vị tính;
+- thêm/sửa/xóa thuốc;
+- tìm thuốc theo mã hoặc tên;
+- lọc theo nhóm/đơn vị tính ở API hiện tại.
 
-Badge `PARTIAL / BLOCKED` phản ánh rằng foundation kỹ thuật đã có nhưng nghiệp vụ kho chưa đủ nguồn phê duyệt để triển khai chính xác.
+Thuốc tối thiểu có:
 
-## 5. Các menu CHƯA MỞ
+- mã thuốc;
+- tên thuốc;
+- nhóm thuốc;
+- đơn vị tính.
 
-Hiện sidebar có các mục:
+Rule hiện đã enforce:
 
-- Nhóm hàng & ĐVT.
-- Hàng hóa.
-- Nhà cung cấp.
-- Nhập kho.
-- Xuất kho.
-- Tồn kho.
-- Báo cáo.
-- AI hỗ trợ.
+- mã thuốc không được trùng;
+- group/unit phải tồn tại;
+- group/unit đang được thuốc sử dụng không thể xóa;
+- Dược sĩ và Khách hàng truy cập UC002 API sẽ bị từ chối `403`.
 
-Các mục này cố ý ở trạng thái **CHƯA MỞ**. Đây không phải lỗi frontend.
+## 7. Các UC chưa coi là hoàn tất
 
-Lý do: trước khi mở module cần Data Dictionary, Use Case/Business Rule và Permission Matrix `ROLE × FR × ACTION × API` được phê duyệt. UI không tự suy diễn quyền hoặc schema nghiệp vụ.
+Các module sau vẫn ở trạng thái chưa triển khai đầy đủ hoặc còn decision gate:
 
-## 6. Đăng xuất
+- UC003 — Quản lý lô nhập;
+- UC004 — Bán thuốc và lập hóa đơn;
+- UC005 — Nhà cung cấp;
+- UC006 — Tồn kho;
+- UC007 — Tra cứu thuốc;
+- UC008 — Cảnh báo hết hạn;
+- UC009 — Thống kê/báo cáo;
+- UC010–UC013 — AI.
 
-Tại cuối sidebar, bấm **Đăng xuất**.
+Đặc biệt chưa tự quyết:
 
-Frontend gọi:
+- ai được thực hiện UC004;
+- FEFO/FIFO/chọn tay khi bán theo lô;
+- số ngày cảnh báo sắp hết hạn;
+- quyền nghiệp vụ của Khách hàng ngoài UC001.
+
+## 8. Đăng xuất
+
+Bấm **Đăng xuất** ở sidebar. Frontend gọi:
 
 ```text
 POST /api/v1/auth/logout
 ```
 
-Sau đó:
+Sau đó refresh token được revoke nếu đang active, local session bị xóa và trình duyệt quay về `/login`.
 
-- refresh token phía backend được revoke nếu đang active;
-- token trong `sessionStorage` bị xóa;
-- user state bị xóa;
-- trình duyệt quay lại `/login`.
-
-## 7. Kiểm tra nhanh khi demo
-
-Một demo foundation hiện tại có thể thực hiện theo thứ tự:
+## 9. Demo nhanh
 
 1. Chạy `docker compose up -d --build`.
 2. Mở `/login`.
-3. Lần lượt đăng nhập bằng `admin`, `keeper`, `accountant`.
-4. Với mỗi tài khoản, xác nhận `/dashboard` hiển thị đúng username và role từ backend.
-5. Xác nhận Core/PostgreSQL đều `ok`.
-6. Xem migration revision và trạng thái AI provider.
-7. Đăng xuất.
-8. Xác nhận quay lại trang login.
+3. Đăng nhập lần lượt `manager`, `pharmacist`, `customer`.
+4. Xác nhận dashboard hiển thị đúng vai trò.
+5. Với `manager`, mở `/catalog` và kiểm thử UC002.
+6. Với `pharmacist` hoặc `customer`, xác nhận UC002 không được mở.
+7. Kiểm tra `/health` trả core/database `ok` và migration `0005_customer_role`.
+8. Đăng xuất.
 
-Việc ba role đăng nhập được không đồng nghĩa các quyền nghiệp vụ đã VERIFIED.
-
-## 8. Khi gặp lỗi
-
-Kiểm tra container:
+## 10. Khi gặp lỗi
 
 ```bash
 docker compose ps
-```
-
-Xem log:
-
-```bash
 docker compose logs backend
-```
-
-hoặc:
-
-```bash
 docker compose logs frontend
 ```
 
-Nếu UI hiển thị `Mã hỗ trợ`, dùng correlation ID đó để đối chiếu structured application log.
-
-## 9. Giới hạn hiện tại
-
-User Guide này không tuyên bố các chức năng master data, nhập/xuất/tồn, báo cáo hoặc AI nghiệp vụ đã hoạt động. Chúng vẫn bị chặn cho tới khi nguồn nghiệp vụ được phê duyệt đủ để triển khai mà không suy diễn requirement.
+Nếu UI hiển thị `Mã hỗ trợ`, dùng correlation ID đó để đối chiếu structured log.
