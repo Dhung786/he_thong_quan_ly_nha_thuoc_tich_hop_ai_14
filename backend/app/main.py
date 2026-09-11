@@ -6,6 +6,7 @@ from sqlalchemy import text
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.auth import router as auth_router
+from app.api.catalog import router as catalog_router
 from app.core.config import settings
 from app.core.database import engine
 from app.core.errors import ApplicationConflict
@@ -18,10 +19,11 @@ application_logger = get_logger("application")
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.1.0",
+    version="0.2.0",
     description=(
-        "Technical foundation API for Warehouse AI. Business inventory endpoints are "
-        "added only after their schema and permission contract are approved."
+        "API for the Group 14 pharmacy management system with AI integration. "
+        "The approved SRS is the functional baseline; UC002 medicine catalog is the first "
+        "business module implemented on top of the verified authentication foundation."
     ),
 )
 app.add_middleware(CorrelationIdMiddleware)
@@ -33,6 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(auth_router)
+app.include_router(catalog_router)
 
 
 def _correlation_id(request: Request) -> str:
