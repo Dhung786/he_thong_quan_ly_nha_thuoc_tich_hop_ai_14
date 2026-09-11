@@ -161,7 +161,7 @@ class AccountCreate(BaseModel):
 class AccountResponse(BaseModel):
     id: int
     username: str
-    role: RoleName
+    role: str
     is_active: bool
     created_at: datetime
     updated_at: datetime
