@@ -27,9 +27,9 @@ import {
   secondsUntilExpiry,
 } from "./session-timing";
 
-const ACCESS_TOKEN_KEY = "warehouse_ai_access_token";
-const REFRESH_TOKEN_KEY = "warehouse_ai_refresh_token";
-const ACCESS_EXPIRES_AT_KEY = "warehouse_ai_access_expires_at";
+const ACCESS_TOKEN_KEY = "pharmacy_ai_access_token";
+const REFRESH_TOKEN_KEY = "pharmacy_ai_refresh_token";
+const ACCESS_EXPIRES_AT_KEY = "pharmacy_ai_access_expires_at";
 
 function readStoredTokens(): TokenPair | null {
   const accessToken = sessionStorage.getItem(ACCESS_TOKEN_KEY);
@@ -72,6 +72,7 @@ function clearTokens(): void {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthContextValue["status"]>("loading");
   const [user, setUser] = useState<CurrentUser | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [sessionGeneration, setSessionGeneration] = useState(0);
   const bootstrapStarted = useRef(false);
   const refreshInFlight = useRef<Promise<void> | null>(null);
@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const establishSession = useCallback(async (tokens: TokenPair) => {
     const currentUser = await currentUserRequest(tokens.access_token);
     storeTokens(tokens);
+    setAccessToken(tokens.access_token);
     setUser(currentUser);
     setStatus("authenticated");
     setSessionGeneration((value) => value + 1);
@@ -86,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const expireLocalSession = useCallback(() => {
     clearTokens();
+    setAccessToken(null);
     setUser(null);
     setStatus("unauthenticated");
   }, []);
@@ -127,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const currentUser = await currentUserRequest(stored.access_token);
+        setAccessToken(stored.access_token);
         setUser(currentUser);
         setStatus("authenticated");
       } catch (error) {
@@ -187,8 +191,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [expireLocalSession]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ status, user, login, logout }),
-    [status, user, login, logout],
+    () => ({ status, user, accessToken, login, logout }),
+    [status, user, accessToken, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

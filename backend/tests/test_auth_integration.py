@@ -16,7 +16,7 @@ async def test_login_refresh_rotation_logout_and_me() -> None:
     password = "AuthTestPassword-123!"
 
     async with SessionLocal() as session:
-        role_result = await session.execute(select(Role).where(Role.name == "ADMIN"))
+        role_result = await session.execute(select(Role).where(Role.name == "MANAGER"))
         role = role_result.scalar_one_or_none()
         assert role is not None
         user = User(
@@ -47,7 +47,7 @@ async def test_login_refresh_rotation_logout_and_me() -> None:
         )
         assert me_response.status_code == 200
         assert me_response.json()["username"] == username
-        assert me_response.json()["role"] == "ADMIN"
+        assert me_response.json()["role"] == "MANAGER"
 
         refresh_response = await client.post(
             "/api/v1/auth/refresh",
@@ -100,7 +100,7 @@ async def test_login_refresh_rotation_logout_and_me() -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("role_name", ["ADMIN", "WAREHOUSE_KEEPER", "ACCOUNTANT"])
+@pytest.mark.parametrize("role_name", ["MANAGER", "PHARMACIST", "CASHIER"])
 async def test_login_and_me_preserve_each_supported_role(role_name: str) -> None:
     username = f"role-{role_name.lower()}-{uuid4().hex[:8]}"
     password = "RoleAuthTest-123!"

@@ -4,12 +4,12 @@ from pydantic import ValidationError
 from app.core.config import Settings
 
 SEED_ENV_VARS = (
-    "SEED_ADMIN_USERNAME",
-    "SEED_ADMIN_PASSWORD",
-    "SEED_WAREHOUSE_KEEPER_USERNAME",
-    "SEED_WAREHOUSE_KEEPER_PASSWORD",
-    "SEED_ACCOUNTANT_USERNAME",
-    "SEED_ACCOUNTANT_PASSWORD",
+    "SEED_MANAGER_USERNAME",
+    "SEED_MANAGER_PASSWORD",
+    "SEED_PHARMACIST_USERNAME",
+    "SEED_PHARMACIST_PASSWORD",
+    "SEED_CASHIER_USERNAME",
+    "SEED_CASHIER_PASSWORD",
 )
 
 
@@ -49,12 +49,12 @@ def test_production_accepts_non_placeholder_value() -> None:
 @pytest.mark.parametrize(
     "kwargs",
     [
-        {"seed_admin_username": "admin-only"},
-        {"seed_admin_password": "password-only"},
-        {"seed_warehouse_keeper_username": "keeper-only"},
-        {"seed_warehouse_keeper_password": "password-only"},
-        {"seed_accountant_username": "accountant-only"},
-        {"seed_accountant_password": "password-only"},
+        {"seed_manager_username": "manager-only"},
+        {"seed_manager_password": "password-only"},
+        {"seed_pharmacist_username": "pharmacist-only"},
+        {"seed_pharmacist_password": "password-only"},
+        {"seed_cashier_username": "cashier-only"},
+        {"seed_cashier_password": "password-only"},
     ],
 )
 def test_seed_credentials_must_be_configured_in_pairs(
@@ -69,14 +69,14 @@ def test_seed_credentials_must_be_configured_in_pairs(
 def test_all_three_seed_role_pairs_are_accepted(monkeypatch: pytest.MonkeyPatch) -> None:
     clear_seed_environment(monkeypatch)
     settings = Settings(
-        seed_admin_username="admin",
-        seed_admin_password="admin-password",
-        seed_warehouse_keeper_username="keeper",
-        seed_warehouse_keeper_password="keeper-password",
-        seed_accountant_username="accountant",
-        seed_accountant_password="accountant-password",
+        seed_manager_username="manager",
+        seed_manager_password="manager-password",
+        seed_pharmacist_username="pharmacist",
+        seed_pharmacist_password="pharmacist-password",
+        seed_cashier_username="cashier",
+        seed_cashier_password="cashier-password",
     )
 
-    assert settings.seed_admin_username == "admin"
-    assert settings.seed_warehouse_keeper_username == "keeper"
-    assert settings.seed_accountant_username == "accountant"
+    assert settings.seed_manager_username == "manager"
+    assert settings.seed_pharmacist_username == "pharmacist"
+    assert settings.seed_cashier_username == "cashier"

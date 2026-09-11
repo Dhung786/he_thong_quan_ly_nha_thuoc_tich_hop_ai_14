@@ -19,14 +19,14 @@ def make_user(role_name: str) -> User:
 
 
 def test_enforce_roles_allows_matching_role() -> None:
-    user = make_user("ADMIN")
-    assert enforce_roles(user, {"ADMIN"}) is user
+    user = make_user("MANAGER")
+    assert enforce_roles(user, {"MANAGER"}) is user
 
 
 def test_enforce_roles_returns_403_for_authenticated_wrong_role() -> None:
-    user = make_user("ACCOUNTANT")
+    user = make_user("CASHIER")
     with pytest.raises(HTTPException) as exc_info:
-        enforce_roles(user, {"ADMIN"})
+        enforce_roles(user, {"MANAGER"})
 
     assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
     assert exc_info.value.detail == "Insufficient permissions"

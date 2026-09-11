@@ -22,6 +22,39 @@ export interface HealthResponse {
   ai: string;
 }
 
+export interface MedicineGroup {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Unit {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Medicine {
+  id: number;
+  code: string;
+  name: string;
+  group_id: number;
+  unit_id: number;
+  group_name: string;
+  unit_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MedicineInput {
+  code: string;
+  name: string;
+  group_id: number;
+  unit_id: number;
+}
+
 interface ErrorEnvelope {
   error?: unknown;
   message?: unknown;
@@ -91,6 +124,23 @@ async function requestJson<T>(
   return response.json() as Promise<T>;
 }
 
+async function requestEmpty(path: string, init?: RequestInit): Promise<void> {
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...init?.headers,
+    },
+  });
+  if (!response.ok) {
+    throw await buildApiError(response);
+  }
+}
+
+function bearer(accessToken: string): Record<string, string> {
+  return { Authorization: `Bearer ${accessToken}` };
+}
+
 export function loginRequest(username: string, password: string): Promise<TokenPair> {
   return requestJson<TokenPair>("/api/v1/auth/login", {
     method: "POST",
@@ -119,7 +169,7 @@ export async function logoutRequest(refreshToken: string): Promise<void> {
 
 export function currentUserRequest(accessToken: string): Promise<CurrentUser> {
   return requestJson<CurrentUser>("/api/v1/auth/me", {
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: bearer(accessToken),
   });
 }
 
@@ -129,4 +179,117 @@ export async function healthRequest(): Promise<HealthResponse> {
     throw await buildApiError(response);
   }
   return response.json() as Promise<HealthResponse>;
+}
+
+export function medicineGroupsRequest(accessToken: string): Promise<MedicineGroup[]> {
+  return requestJson<MedicineGroup[]>("/api/v1/catalog/groups", {
+    headers: bearer(accessToken),
+  });
+}
+
+export function createMedicineGroupRequest(
+  accessToken: string,
+  name: string,
+): Promise<MedicineGroup> {
+  return requestJson<MedicineGroup>("/api/v1/catalog/groups", {
+    method: "POST",
+    headers: bearer(accessToken),
+    body: JSON.stringify({ name }),
+  });
+}
+
+export function updateMedicineGroupRequest(
+  accessToken: string,
+  id: number,
+  name: string,
+): Promise<MedicineGroup> {
+  return requestJson<MedicineGroup>(`/api/v1/catalog/groups/${id}`, {
+    method: "PUT",
+    headers: bearer(accessToken),
+    body: JSON.stringify({ name }),
+  });
+}
+
+export function deleteMedicineGroupRequest(accessToken: string, id: number): Promise<void> {
+  return requestEmpty(`/api/v1/catalog/groups/${id}`, {
+    method: "DELETE",
+    headers: bearer(accessToken),
+  });
+}
+
+export function unitsRequest(accessToken: string): Promise<Unit[]> {
+  return requestJson<Unit[]>("/api/v1/catalog/units", {
+    headers: bearer(accessToken),
+  });
+}
+
+export function createUnitRequest(accessToken: string, name: string): Promise<Unit> {
+  return requestJson<Unit>("/api/v1/catalog/units", {
+    method: "POST",
+    headers: bearer(accessToken),
+    body: JSON.stringify({ name }),
+  });
+}
+
+export function updateUnitRequest(
+  accessToken: string,
+  id: number,
+  name: string,
+): Promise<Unit> {
+  return requestJson<Unit>(`/api/v1/catalog/units/${id}`, {
+    method: "PUT",
+    headers: bearer(accessToken),
+    body: JSON.stringify({ name }),
+  });
+}
+
+export function deleteUnitRequest(accessToken: string, id: number): Promise<void> {
+  return requestEmpty(`/api/v1/catalog/units/${id}`, {
+    method: "DELETE",
+    headers: bearer(accessToken),
+  });
+}
+
+export function medicinesRequest(
+  accessToken: string,
+  filters: { q?: string; groupId?: number; unitId?: number } = {},
+): Promise<Medicine[]> {
+  const params = new URLSearchParams();
+  if (filters.q?.trim()) params.set("q", filters.q.trim());
+  if (filters.groupId) params.set("group_id", String(filters.groupId));
+  if (filters.unitId) params.set("unit_id", String(filters.unitId));
+  const query = params.toString();
+  return requestJson<Medicine[]>(`/api/v1/catalog/medicines${query ? `?${query}` : ""}`, {
+    headers: bearer(accessToken),
+  });
+}
+
+export function createMedicineRequest(
+  accessToken: string,
+  payload: MedicineInput,
+): Promise<Medicine> {
+  return requestJson<Medicine>("/api/v1/catalog/medicines", {
+    method: "POST",
+    headers: bearer(accessToken),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateMedicineRequest(
+  accessToken: string,
+  id: number,
+  payload: MedicineInput,
+): Promise<Medicine> {
+  return requestJson<Medicine>(`/api/v1/catalog/medicines/${id}`, {
+    method: "PUT",
+    headers: bearer(accessToken),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteMedicineRequest(accessToken: string, id: number): Promise<void> {
+  return requestEmpty(`/api/v1/catalog/medicines/${id}`, {
+    method: "DELETE",
+    headers: bearer(accessToken),
+  });
 }

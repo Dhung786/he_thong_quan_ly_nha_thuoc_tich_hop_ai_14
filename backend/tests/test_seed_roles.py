@@ -13,25 +13,17 @@ from app.models.auth import Role, User
 async def test_seed_creates_idempotent_demo_users_for_all_roles(monkeypatch) -> None:
     suffix = uuid4().hex[:10]
     credentials = (
-        ("ADMIN", f"seed-admin-{suffix}", "SeedAdmin123!"),
-        ("WAREHOUSE_KEEPER", f"seed-keeper-{suffix}", "SeedKeeper123!"),
-        ("ACCOUNTANT", f"seed-accountant-{suffix}", "SeedAccountant123!"),
+        ("MANAGER", f"seed-manager-{suffix}", "SeedManager123!"),
+        ("PHARMACIST", f"seed-pharmacist-{suffix}", "SeedPharmacist123!"),
+        ("CASHIER", f"seed-cashier-{suffix}", "SeedCashier123!"),
     )
 
-    monkeypatch.setattr(seed_module.settings, "seed_admin_username", credentials[0][1])
-    monkeypatch.setattr(seed_module.settings, "seed_admin_password", credentials[0][2])
-    monkeypatch.setattr(
-        seed_module.settings,
-        "seed_warehouse_keeper_username",
-        credentials[1][1],
-    )
-    monkeypatch.setattr(
-        seed_module.settings,
-        "seed_warehouse_keeper_password",
-        credentials[1][2],
-    )
-    monkeypatch.setattr(seed_module.settings, "seed_accountant_username", credentials[2][1])
-    monkeypatch.setattr(seed_module.settings, "seed_accountant_password", credentials[2][2])
+    monkeypatch.setattr(seed_module.settings, "seed_manager_username", credentials[0][1])
+    monkeypatch.setattr(seed_module.settings, "seed_manager_password", credentials[0][2])
+    monkeypatch.setattr(seed_module.settings, "seed_pharmacist_username", credentials[1][1])
+    monkeypatch.setattr(seed_module.settings, "seed_pharmacist_password", credentials[1][2])
+    monkeypatch.setattr(seed_module.settings, "seed_cashier_username", credentials[2][1])
+    monkeypatch.setattr(seed_module.settings, "seed_cashier_password", credentials[2][2])
 
     await seed_module.seed()
     await seed_module.seed()

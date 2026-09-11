@@ -65,19 +65,19 @@ export function LoginPage() {
       <div className="mx-auto grid min-h-[80vh] max-w-6xl items-center gap-10 lg:grid-cols-2">
         <section>
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-400">
-            Warehouse AI
+            Pharmacy AI · Nhóm 14
           </p>
           <h1 className="mt-4 max-w-xl text-4xl font-bold leading-tight sm:text-5xl">
-            Hệ thống Quản lý Kho tích hợp AI
+            Hệ thống quản lý nhà thuốc có tích hợp AI
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-8 text-slate-400">
-            Đăng nhập để truy cập dashboard. Quyền nghiệp vụ chi tiết chỉ được mở sau khi
-            Permission Matrix được phê duyệt.
+            Đăng nhập bằng tài khoản Quản lý, Dược sĩ hoặc Thu ngân. Hệ thống cấp giao diện
+            theo vai trò đã xác định trong SRS V1.0.
           </p>
           <div className="mt-8 grid max-w-lg gap-3 sm:grid-cols-3">
-            <InfoCard title="Bảo mật" text="JWT + refresh rotation" />
+            <InfoCard title="UC001" text="Đăng nhập & phân quyền" />
             <InfoCard title="Dữ liệu" text="PostgreSQL" />
-            <InfoCard title="Theo dõi" text="Audit + correlation ID" />
+            <InfoCard title="Bảo mật" text="JWT + refresh rotation" />
           </div>
         </section>
 

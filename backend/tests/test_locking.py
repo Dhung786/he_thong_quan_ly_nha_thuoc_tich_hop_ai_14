@@ -15,7 +15,7 @@ def test_ordered_unique_ids_sorts_and_deduplicates() -> None:
 
 async def _create_test_user(prefix: str) -> int:
     async with SessionLocal() as session:
-        role_result = await session.execute(select(Role).where(Role.name == "ADMIN"))
+        role_result = await session.execute(select(Role).where(Role.name == "MANAGER"))
         role = role_result.scalar_one()
         user = User(
             username=f"{prefix}-{uuid4().hex[:8]}",
