@@ -29,8 +29,12 @@ jobs:
       DATABASE_URL: postgresql+asyncpg://warehouse:warehouse@localhost:5432/warehouse_ai_test
       JWT_SECRET: CI_ONLY_NOT_A_REAL_SECRET_CHANGE_ME
       APP_ENV: test
-      SEED_ADMIN_USERNAME: ci-admin
-      SEED_ADMIN_PASSWORD: CI_ADMIN_ONLY_CHANGE_ME_123!
+      SEED_MANAGER_USERNAME: ci-manager
+      SEED_MANAGER_PASSWORD: CI_MANAGER_ONLY_CHANGE_ME_123!
+      SEED_PHARMACIST_USERNAME: ci-pharmacist
+      SEED_PHARMACIST_PASSWORD: CI_PHARMACIST_ONLY_CHANGE_ME_123!
+      SEED_CASHIER_USERNAME: ci-cashier
+      SEED_CASHIER_PASSWORD: CI_CASHIER_ONLY_CHANGE_ME_123!
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -79,13 +83,13 @@ jobs:
           docker compose exec -T postgres sh -c \
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE TABLE backup_restore_probe (value integer NOT NULL); INSERT INTO backup_restore_probe VALUES (42);"'
       - name: Create database backup
-        run: python scripts/backup_db.py --output /tmp/warehouse_ai_ci.dump
+        run: python scripts/backup_db.py --output /tmp/pharmacy_ai_ci.dump
       - name: Delete probe after backup
         run: |
           docker compose exec -T postgres sh -c \
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "DROP TABLE backup_restore_probe;"'
       - name: Restore database backup
-        run: python scripts/restore_db.py /tmp/warehouse_ai_ci.dump --confirm-restore
+        run: python scripts/restore_db.py /tmp/pharmacy_ai_ci.dump --confirm-restore
       - name: Verify restored probe
         run: |
           value="$(docker compose exec -T postgres sh -c 'psql -At -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT value FROM backup_restore_probe;"')"
@@ -117,9 +121,9 @@ jobs:
               body = json.load(response)
           assert body["core"] == "ok"
           assert body["database"] == "ok"
-          assert body["migration"] == "0003_idempotency_infrastructure"
+          assert body["migration"] == "0004_pharmacy_srs_baseline"
           PY
-      - name: Verify seeded authentication flow
+      - name: Verify manager authentication and UC002 catalog flow
         run: |
           python - <<'PY'
           import json
@@ -144,7 +148,7 @@ jobs:
           with request(
               "/api/v1/auth/login",
               method="POST",
-              body={"username": "admin", "password": "Admin123!ChangeMe"},
+              body={"username": "manager", "password": "Manager123!ChangeMe"},
           ) as response:
               assert response.status == 200
               tokens = json.load(response)
@@ -152,8 +156,41 @@ jobs:
           with request("/api/v1/auth/me", token=tokens["access_token"]) as response:
               assert response.status == 200
               user = json.load(response)
-          assert user["username"] == "admin"
-          assert user["role"] == "ADMIN"
+          assert user["username"] == "manager"
+          assert user["role"] == "MANAGER"
+
+          with request(
+              "/api/v1/catalog/groups",
+              method="POST",
+              body={"name": "CI group"},
+              token=tokens["access_token"],
+          ) as response:
+              assert response.status == 201
+              group = json.load(response)
+
+          with request(
+              "/api/v1/catalog/units",
+              method="POST",
+              body={"name": "CI unit"},
+              token=tokens["access_token"],
+          ) as response:
+              assert response.status == 201
+              unit = json.load(response)
+
+          with request(
+              "/api/v1/catalog/medicines",
+              method="POST",
+              body={
+                  "code": "CI-MED-001",
+                  "name": "CI medicine",
+                  "group_id": group["id"],
+                  "unit_id": unit["id"],
+              },
+              token=tokens["access_token"],
+          ) as response:
+              assert response.status == 201
+              medicine = json.load(response)
+          assert medicine["code"] == "CI-MED-001"
 
           with request(
               "/api/v1/auth/logout",
@@ -175,7 +212,7 @@ jobs:
       - name: Verify database migration table
         run: |
           revision="$(docker compose exec -T postgres sh -c 'psql -At -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT version_num FROM alembic_version;"')"
-          test "$revision" = "0003_idempotency_infrastructure"
+          test "$revision" = "0004_pharmacy_srs_baseline"
       - name: Show service logs on failure
         if: failure()
         run: docker compose logs --no-color
