@@ -142,6 +142,95 @@ async def test_login_and_me_preserve_each_supported_role(role_name: str) -> None
 
 
 @pytest.mark.asyncio
+async def test_access_token_is_rejected_after_database_role_change() -> None:
+    username = f"role-change-{uuid4().hex[:8]}"
+    password = "RoleChangeTest-123!"
+
+    async with SessionLocal() as session:
+        admin_role = (
+            await session.execute(select(Role).where(Role.name == "ADMIN"))
+        ).scalar_one()
+        user = User(
+            username=username,
+            password_hash=hash_password(password),
+            role_id=admin_role.id,
+            is_active=True,
+        )
+        session.add(user)
+        await session.commit()
+        user_id = user.id
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        login_response = await client.post(
+            "/api/v1/auth/login",
+            json={"username": username, "password": password},
+        )
+        assert login_response.status_code == 200
+        access_token = login_response.json()["access_token"]
+
+        async with SessionLocal() as session:
+            keeper_role = (
+                await session.execute(select(Role).where(Role.name == "WAREHOUSE_KEEPER"))
+            ).scalar_one()
+            db_user = await session.get(User, user_id)
+            assert db_user is not None
+            db_user.role_id = keeper_role.id
+            await session.commit()
+
+        me_response = await client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+
+    assert me_response.status_code == 401
+    assert me_response.json()["error"] == "unauthorized"
+
+
+@pytest.mark.asyncio
+async def test_access_token_is_rejected_after_account_is_deactivated() -> None:
+    username = f"inactive-{uuid4().hex[:8]}"
+    password = "InactiveTest-123!"
+
+    async with SessionLocal() as session:
+        admin_role = (
+            await session.execute(select(Role).where(Role.name == "ADMIN"))
+        ).scalar_one()
+        user = User(
+            username=username,
+            password_hash=hash_password(password),
+            role_id=admin_role.id,
+            is_active=True,
+        )
+        session.add(user)
+        await session.commit()
+        user_id = user.id
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        login_response = await client.post(
+            "/api/v1/auth/login",
+            json={"username": username, "password": password},
+        )
+        assert login_response.status_code == 200
+        access_token = login_response.json()["access_token"]
+
+        async with SessionLocal() as session:
+            db_user = await session.get(User, user_id)
+            assert db_user is not None
+            db_user.is_active = False
+            await session.commit()
+
+        me_response = await client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+
+    assert me_response.status_code == 401
+    assert me_response.json()["error"] == "unauthorized"
+
+
+@pytest.mark.asyncio
 async def test_login_rejects_wrong_password() -> None:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
