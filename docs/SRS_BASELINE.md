@@ -16,6 +16,10 @@ Người dùng đã thay actor **Thu ngân** bằng **Khách hàng**. Vì đây 
 
 Quyền nghiệp vụ cũ của Thu ngân **không được tự động chuyển sang Khách hàng**. `CUSTOMER` hiện chỉ chắc chắn thuộc UC001 (đăng nhập/phân quyền). Các quyền mua thuốc, xem hóa đơn, tra cứu hoặc chức năng khác phải có quyết định nghiệp vụ riêng trước khi backend mở quyền.
 
+Người dùng cũng đã chốt phạm vi giao diện **Dược sĩ**: thực hiện các nghiệp vụ liên quan đến thuốc, tra cứu thông tin thuốc, hỗ trợ bán thuốc và sử dụng các chức năng AI để tham khảo thông tin và quy trình nội bộ.
+
+Từ quyết định này, permission đã đủ rõ để mở **UC007 tra cứu thuốc dạng read-only** cho `PHARMACIST`. Dược sĩ không kế thừa quyền CRUD danh mục của UC002. Các khu vực hỗ trợ bán thuốc và AI được phép có giao diện theo vai trò, nhưng chỉ thực hiện thao tác backend thật khi UC004/UC010–UC013 tương ứng đã hoàn tất và được kiểm thử.
+
 ## Danh sách Use Case baseline
 
 - UC001 — Đăng nhập và phân quyền
@@ -54,18 +58,29 @@ Ràng buộc:
 
 Các trường “thông tin cần thiết khác” chưa được định nghĩa nên chưa được tự bổ sung vào schema.
 
+## UC007 — tra cứu thuốc cho Dược sĩ
+
+Quyết định người dùng cho phép `PHARMACIST` tra cứu thông tin thuốc. Implementation hiện dùng endpoint read-only riêng, tìm theo mã hoặc tên thuốc và trả về dữ liệu danh mục đã có trong PostgreSQL.
+
+- `MANAGER`: được phép dùng lookup.
+- `PHARMACIST`: được phép dùng lookup.
+- `CUSTOMER`: chưa được mở quyền lookup.
+- Endpoint lookup không cung cấp thao tác thêm/sửa/xóa.
+
 ## Mâu thuẫn/điểm cần quyết định
 
-1. UC004 trong SRS cũ mâu thuẫn giữa Quản lý và Thu ngân. Vì Thu ngân đã bị thay bằng Khách hàng, quyền bán thuốc của `CUSTOMER` vẫn **chưa được suy diễn**.
+1. UC004 trong SRS cũ mâu thuẫn giữa Quản lý và Thu ngân. Vì Thu ngân đã bị thay bằng Khách hàng, quyền bán thuốc của `CUSTOMER` vẫn **chưa được suy diễn**. Dược sĩ đã được phê duyệt ở mức **hỗ trợ bán thuốc**, nhưng quyền tạo/chốt hóa đơn và cách chọn lô vẫn cần rule cụ thể trước khi backend mutation được mở.
 2. UC005 cũ có mapping actor không nhất quán; cần chốt lại quyền của từng role hiện tại trước khi khóa permission contract.
 3. Quy tắc chọn lô khi bán chưa được xác định: FEFO, FIFO hay người dùng tự chọn.
 4. Khoảng thời gian cảnh báo thuốc sắp hết hạn chưa được xác định.
 5. Quyền nghiệp vụ của Khách hàng ngoài UC001 chưa được xác định.
 
-Các điểm trên chỉ block module liên quan, không block UC002 hoặc các phần độc lập đã đủ rõ.
+Các điểm trên chỉ block module liên quan, không block UC002 hoặc UC007 read-only đã đủ rõ.
 
 ## Trạng thái triển khai
 
 - UC001: IMPLEMENTED; role baseline cập nhật sang `MANAGER / PHARMACIST / CUSTOMER`.
 - UC002: IMPLEMENTED trên baseline nhà thuốc cho `MANAGER`.
-- UC003–UC013: chưa coi là hoàn tất; triển khai tiếp theo phải tuân thủ decision gate của từng module.
+- UC007 read-only cho `PHARMACIST`: IMPLEMENTED trên branch `feature/pharmacist-workspace-v1`, chờ CI để VERIFIED.
+- Giao diện Dược sĩ cho hỗ trợ bán thuốc, AI Dược sĩ và quy trình nội bộ: IMPLEMENTED UI shell, backend tương ứng chưa được coi là hoàn tất.
+- UC003–UC006, UC008–UC013: chưa coi là hoàn tất; triển khai tiếp theo phải tuân thủ decision gate của từng module.
