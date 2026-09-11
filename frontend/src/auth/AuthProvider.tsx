@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import {
   ApiError,
@@ -43,9 +50,10 @@ function clearTokens(): void {
   sessionStorage.removeItem(REFRESH_TOKEN_KEY);
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthContextValue["status"]>("loading");
   const [user, setUser] = useState<CurrentUser | null>(null);
+  const bootstrapStarted = useRef(false);
 
   const establishSession = useCallback(async (tokens: TokenPair) => {
     storeTokens(tokens);
@@ -55,45 +63,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    let active = true;
+    if (bootstrapStarted.current) return;
+    bootstrapStarted.current = true;
 
     async function bootstrap() {
       const stored = readStoredTokens();
       if (!stored) {
-        if (active) setStatus("unauthenticated");
+        setStatus("unauthenticated");
         return;
       }
 
       try {
         const currentUser = await currentUserRequest(stored.access_token);
-        if (!active) return;
         setUser(currentUser);
         setStatus("authenticated");
       } catch (error) {
         if (!(error instanceof ApiError) || error.status !== 401) {
           clearTokens();
-          if (active) setStatus("unauthenticated");
+          setStatus("unauthenticated");
           return;
         }
 
         try {
           const replacement = await refreshRequest(stored.refresh_token);
-          if (!active) return;
           await establishSession(replacement);
         } catch {
           clearTokens();
-          if (active) {
-            setUser(null);
-            setStatus("unauthenticated");
-          }
+          setUser(null);
+          setStatus("unauthenticated");
         }
       }
     }
 
     void bootstrap();
-    return () => {
-      active = false;
-    };
   }, [establishSession]);
 
   const login = useCallback(
