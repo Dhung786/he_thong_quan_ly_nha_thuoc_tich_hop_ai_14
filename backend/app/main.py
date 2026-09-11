@@ -7,6 +7,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.auth import router as auth_router
 from app.api.catalog import router as catalog_router
+from app.api.manager_operations import router as manager_operations_router
 from app.api.medicine_lookup import router as medicine_lookup_router
 from app.core.config import settings
 from app.core.database import engine
@@ -20,11 +21,11 @@ application_logger = get_logger("application")
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.3.0",
+    version="0.4.0",
     description=(
         "API for the Group 14 pharmacy management system with AI integration. "
-        "The approved SRS and explicit user decisions are the functional baseline. "
-        "UC002 manager catalog and UC007 read-only medicine lookup for pharmacists are implemented."
+        "Manager operational APIs now cover suppliers, batches, inventory, expiry, invoices, reports, account administration and advanced medicine lookup. "
+        "AI remains optional and is reported separately by the health endpoint."
     ),
 )
 app.add_middleware(CorrelationIdMiddleware)
@@ -38,6 +39,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(catalog_router)
 app.include_router(medicine_lookup_router)
+app.include_router(manager_operations_router)
 
 
 def _correlation_id(request: Request) -> str:

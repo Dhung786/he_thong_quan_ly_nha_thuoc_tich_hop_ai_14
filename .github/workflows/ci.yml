@@ -121,7 +121,7 @@ jobs:
               body = json.load(response)
           assert body["core"] == "ok"
           assert body["database"] == "ok"
-          assert body["migration"] == "0005_customer_role"
+          assert body["migration"] == "0006_manager_operational_apis"
           PY
       - name: Verify manager authentication and UC002 catalog flow
         run: |
@@ -256,7 +256,7 @@ jobs:
       - name: Verify database migration table
         run: |
           revision="$(docker compose exec -T postgres sh -c 'psql -At -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT version_num FROM alembic_version;"')"
-          test "$revision" = "0005_customer_role"
+          test "$revision" = "0006_manager_operational_apis"
       - name: Show service logs on failure
         if: failure()
         run: docker compose logs --no-color
