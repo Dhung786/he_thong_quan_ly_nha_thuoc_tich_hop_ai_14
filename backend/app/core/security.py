@@ -22,7 +22,10 @@ def create_access_token(subject: str, role: str, expires_delta: timedelta | None
         expires_delta or timedelta(minutes=settings.access_token_expire_minutes)
     )
     payload = {"sub": subject, "role": role, "exp": expires_at}
-    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    token = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    if not isinstance(token, str):
+        raise TypeError("JWT encoder returned a non-string token")
+    return token
 
 
 def decode_access_token(token: str) -> dict[str, Any]:
