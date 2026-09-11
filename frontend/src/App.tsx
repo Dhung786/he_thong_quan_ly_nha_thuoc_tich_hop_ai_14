@@ -3,7 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { RequireAuth } from "./auth/RequireAuth";
 import { LoginPage } from "./pages/LoginPage";
 import { ManagerFeaturePage } from "./pages/ManagerFeaturePage";
-import { MedicineCatalogPage } from "./pages/MedicineCatalogPage";
+import { MedicineCatalogCleanPage } from "./pages/MedicineCatalogCleanPage";
 import { PharmacistFeaturePage } from "./pages/PharmacistFeaturePage";
 import { PharmacistMedicineLookupPage } from "./pages/PharmacistMedicineLookupPage";
 import { RoleDashboardPage } from "./pages/RoleDashboardPage";
@@ -14,7 +14,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<RequireAuth />}>
         <Route path="/dashboard" element={<RoleDashboardPage />} />
-        <Route path="/catalog" element={<MedicineCatalogPage />} />
+        <Route path="/catalog" element={<MedicineCatalogCleanPage />} />
 
         <Route path="/pharmacist/medicines" element={<PharmacistMedicineLookupPage />} />
         <Route path="/pharmacist/inventory" element={<PharmacistFeaturePage title="Tồn kho & lô thuốc" description="Theo dõi số lượng tồn, ngưỡng tồn tối thiểu, thông tin lô và hạn sử dụng để hỗ trợ tra cứu và nghiệp vụ hằng ngày." status="Đang chờ dữ liệu tồn kho và lô thuốc" />} />
