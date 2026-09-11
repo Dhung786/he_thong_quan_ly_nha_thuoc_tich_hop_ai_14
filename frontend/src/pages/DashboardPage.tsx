@@ -66,7 +66,7 @@ export function DashboardPage() {
         <main className="p-5 sm:p-8 lg:p-10">
           <div className="mb-5 flex items-center gap-2 text-xs text-violet-300">
             <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 font-bold">DEMO</span>
-            <span className="text-slate-500">Các chỉ số doanh thu, tồn kho và hạn dùng bên dưới là số liệu minh họa.</span>
+            <span className="text-slate-500">Các chỉ số doanh thu, tồn kho và hạn dùng bên dưới vẫn là số liệu minh họa cho tới khi giao diện chuyển hoàn toàn sang dữ liệu API.</span>
           </div>
 
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -77,15 +77,15 @@ export function DashboardPage() {
           </section>
 
           <section className="mt-7 grid gap-5 xl:grid-cols-2">
-            <FeaturePanel title="2. Quản lý thuốc" icon="💊" to="/catalog" status="Đã có dữ liệu thật">Danh sách thuốc, nhóm thuốc và đơn vị tính được lưu trong PostgreSQL.</FeaturePanel>
-            <FeaturePanel title="3. Quản lý nhập thuốc" icon="📥" to="/manager/imports" status="Có dữ liệu demo">Quản lý lô nhập, hạn sử dụng, số lượng, giá nhập, giá bán và nhà cung cấp.</FeaturePanel>
-            <FeaturePanel title="4. Bán thuốc" icon="🧾" to="/manager/sales" status="Có dữ liệu demo">Tìm thuốc, kiểm tra tồn, nhập số lượng, tính tiền và tạo hóa đơn.</FeaturePanel>
-            <FeaturePanel title="5. Tồn kho" icon="📦" to="/manager/inventory" status="Có dữ liệu demo">Theo dõi tồn theo thuốc hoặc lô và cảnh báo khi thấp hơn ngưỡng.</FeaturePanel>
-            <FeaturePanel title="6. Hạn sử dụng" icon="⏳" to="/manager/expiry" status="Có dữ liệu demo">Theo dõi thuốc sắp hết hạn và thuốc đã hết hạn theo từng lô.</FeaturePanel>
-            <FeaturePanel title="7. Tra cứu thuốc" icon="🔎" to="/manager/lookup" status="Có dữ liệu demo">Tra cứu theo tên, mã, nhóm, lô hoặc hạn sử dụng.</FeaturePanel>
-            <FeaturePanel title="8. Báo cáo - Thống kê" icon="📈" to="/manager/reports" status="Có dữ liệu demo">Báo cáo doanh thu, tồn kho và thuốc sắp hết hạn theo khoảng thời gian.</FeaturePanel>
-            <FeaturePanel title="9. Trợ lý AI" icon="🤖" to="/manager/ai" status={aiConfigured ? "AI đã cấu hình" : "Có giao diện demo"}>Tóm tắt thông tin thuốc, hỗ trợ báo cáo hạn dùng và hỏi đáp quy trình nội bộ.</FeaturePanel>
-            <FeaturePanel title="10. Tài khoản / Phân quyền" icon="👥" to="/manager/users" status="Có dữ liệu demo">Quản lý tài khoản, vai trò, trạng thái tài khoản và đặt lại mật khẩu.</FeaturePanel>
+            <FeaturePanel title="2. Quản lý thuốc" icon="💊" to="/catalog" status="Dữ liệu thật">Danh sách thuốc, nhóm thuốc và đơn vị tính được lưu trong PostgreSQL.</FeaturePanel>
+            <FeaturePanel title="3. Quản lý nhập thuốc" icon="📥" to="/manager/imports" status="API sẵn sàng">API nhà cung cấp và lô nhập đã có; giao diện demo có thể tiếp tục dùng để nhập thử.</FeaturePanel>
+            <FeaturePanel title="4. Bán thuốc" icon="🧾" to="/manager/sales" status="API sẵn sàng">API hóa đơn hỗ trợ tạo nháp, chốt hóa đơn theo lô được chọn và trừ tồn an toàn.</FeaturePanel>
+            <FeaturePanel title="5. Tồn kho" icon="📦" to="/manager/inventory" status="API sẵn sàng">API tồn kho đọc số lượng còn lại theo từng lô và hỗ trợ lọc theo ngưỡng.</FeaturePanel>
+            <FeaturePanel title="6. Hạn sử dụng" icon="⏳" to="/manager/expiry" status="API sẵn sàng">API thuốc sắp hết hạn và đã hết hạn hoạt động theo số ngày cảnh báo do người dùng truyền vào.</FeaturePanel>
+            <FeaturePanel title="7. Tra cứu thuốc" icon="🔎" to="/manager/lookup" status="Tra cứu nâng cao sẵn sàng">Danh mục thuốc đã có dữ liệu; API tra cứu nâng cao hỗ trợ nhóm, đơn vị, nhà cung cấp và hạn dùng.</FeaturePanel>
+            <FeaturePanel title="8. Báo cáo - Thống kê" icon="📈" to="/manager/reports" status="API sẵn sàng">API báo cáo tổng hợp doanh thu hóa đơn đã chốt, tồn kho và hạn dùng.</FeaturePanel>
+            <FeaturePanel title="9. Trợ lý AI" icon="🤖" to="/manager/ai" status={aiConfigured ? "AI đã cấu hình" : "AI chưa được cấu hình"}>Tóm tắt thông tin thuốc, hỗ trợ báo cáo hạn dùng và hỏi đáp quy trình nội bộ.</FeaturePanel>
+            <FeaturePanel title="10. Tài khoản / Phân quyền" icon="👥" to="/manager/users" status="API sẵn sàng">API quản trị tài khoản hỗ trợ tạo tài khoản, đổi vai trò, khóa/mở khóa và đặt lại mật khẩu.</FeaturePanel>
           </section>
 
           <section className="mt-7 grid gap-4 md:grid-cols-3">
