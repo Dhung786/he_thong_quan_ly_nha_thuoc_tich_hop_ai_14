@@ -11,5 +11,5 @@ def test_health_reports_database_and_migration_available() -> None:
     body = response.json()
     assert body["core"] == "ok"
     assert body["database"] == "ok"
-    assert body["migration"] == "0004_pharmacy_srs_baseline"
+    assert body["migration"] == "0005_customer_role"
     assert body["ai"] in {"not_configured", "configured"}
