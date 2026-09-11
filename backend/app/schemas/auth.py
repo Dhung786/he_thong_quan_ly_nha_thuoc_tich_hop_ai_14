@@ -2,12 +2,24 @@ from pydantic import BaseModel, Field
 
 
 class LoginRequest(BaseModel):
-    username: str = Field(min_length=1, max_length=100)
-    password: str = Field(min_length=1, max_length=256)
+    username: str = Field(
+        min_length=1,
+        max_length=100,
+        examples=["admin"],
+    )
+    password: str = Field(
+        min_length=1,
+        max_length=256,
+        json_schema_extra={"writeOnly": True},
+    )
 
 
 class RefreshTokenRequest(BaseModel):
-    refresh_token: str = Field(min_length=32, max_length=2048)
+    refresh_token: str = Field(
+        min_length=32,
+        max_length=2048,
+        json_schema_extra={"writeOnly": True},
+    )
 
 
 class TokenPairResponse(BaseModel):
