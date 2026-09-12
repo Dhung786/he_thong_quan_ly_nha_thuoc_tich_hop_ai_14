@@ -71,13 +71,13 @@ export function LoginPage() {
             Hệ thống quản lý nhà thuốc có tích hợp AI
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-8 text-slate-400">
-            Đăng nhập bằng tài khoản Quản lý, Dược sĩ hoặc Khách hàng. Quyền nghiệp vụ được
-            backend kiểm tra theo vai trò và các quyết định đã được phê duyệt.
+            Đăng nhập bằng tài khoản Quản lý, Dược sĩ hoặc Thu ngân. Quyền nghiệp vụ được
+            backend kiểm tra theo vai trò được cấp.
           </p>
           <div className="mt-8 grid max-w-lg gap-3 sm:grid-cols-3">
-            <InfoCard title="UC001" text="Đăng nhập & phân quyền" />
-            <InfoCard title="Dữ liệu" text="PostgreSQL" />
-            <InfoCard title="Bảo mật" text="JWT + refresh rotation" />
+            <InfoCard title="Quản lý" text="Quản trị hệ thống" />
+            <InfoCard title="Dược sĩ" text="Nghiệp vụ nhà thuốc" />
+            <InfoCard title="Thu ngân" text="Bán hàng & hóa đơn" />
           </div>
         </section>
 
@@ -131,11 +131,6 @@ export function LoginPage() {
               {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
           </form>
-
-          <p className="mt-6 text-xs leading-5 text-slate-500">
-            Phiên đăng nhập được giữ trong tab trình duyệt hiện tại. Refresh token không được
-            lưu vĩnh viễn trong localStorage.
-          </p>
         </section>
       </div>
     </main>
