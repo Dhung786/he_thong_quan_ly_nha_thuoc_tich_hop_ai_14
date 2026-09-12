@@ -7,6 +7,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.auth import router as auth_router
 from app.api.cashier import router as cashier_router
+from app.api.cashier_ai import router as cashier_ai_router
 from app.api.catalog import router as catalog_router
 from app.api.manager_ai import router as manager_ai_router
 from app.api.manager_operations import router as manager_operations_router
@@ -24,7 +25,7 @@ application_logger = get_logger("application")
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.6.0",
+    version="0.7.0",
     description=(
         "API for the Group 14 pharmacy management system with AI integration. "
         "Supports manager, pharmacist and cashier operational workflows."
@@ -44,6 +45,7 @@ app.include_router(medicine_lookup_router)
 app.include_router(manager_operations_router)
 app.include_router(manager_ai_router)
 app.include_router(cashier_router)
+app.include_router(cashier_ai_router)
 
 
 def _correlation_id(request: Request) -> str:
