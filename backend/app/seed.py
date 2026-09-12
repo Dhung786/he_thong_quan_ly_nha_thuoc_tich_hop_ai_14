@@ -269,7 +269,7 @@ async def _seed_demo_data(session: AsyncSession, roles: dict[str, Role]) -> None
     batch_map: dict[str, MedicineBatch] = {}
     medicine_list = list(medicines.items())
     for index, (medicine_code, medicine) in enumerate(medicine_list, start=1):
-        purchase_price, selling_price = prices[medicine_code]
+        purchase_price_decimal, selling_price_decimal = prices[medicine_code]
         expiry_days = expiry_cycle[(index - 1) % len(expiry_cycle)]
         code = f"DEMO-LOT-{index:03d}A"
         batch_map[code] = await _batch(
@@ -280,8 +280,8 @@ async def _seed_demo_data(session: AsyncSession, roles: dict[str, Role]) -> None
             quantity=70 + index * 7,
             received_date=today - timedelta(days=210 + index * 2),
             expiry_date=today + timedelta(days=expiry_days),
-            purchase_price=purchase_price,
-            selling_price=selling_price,
+            purchase_price=purchase_price_decimal,
+            selling_price=selling_price_decimal,
         )
 
         if index <= 12:
@@ -294,8 +294,8 @@ async def _seed_demo_data(session: AsyncSession, roles: dict[str, Role]) -> None
                 quantity=110 + index * 5,
                 received_date=today - timedelta(days=90 + index),
                 expiry_date=today + timedelta(days=150 + index * 18),
-                purchase_price=purchase_price + Decimal("100"),
-                selling_price=selling_price + Decimal("200"),
+                purchase_price=purchase_price_decimal + Decimal("100"),
+                selling_price=selling_price_decimal + Decimal("200"),
             )
 
     manager_username = settings.seed_manager_username
