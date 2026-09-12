@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     seed_customer_password: str | None = None
     cors_origins: list[str] = ["http://localhost:5173"]
 
-    ai_provider: str = "demo"
+    ai_provider: str = "disabled"
     ai_api_key: str | None = None
     ai_base_url: str | None = None
     ai_model: str | None = None
