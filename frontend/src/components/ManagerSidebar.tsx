@@ -15,33 +15,38 @@ const managerNavItems = [
 
 export function ManagerSidebar() {
   return (
-    <aside className="border-b border-slate-800 bg-[#07101f] px-4 py-6 lg:min-h-screen lg:border-b-0 lg:border-r">
-      <div className="flex items-center gap-3 px-2">
-        <div className="grid h-11 w-11 rotate-[-40deg] place-items-center rounded-2xl bg-gradient-to-br from-sky-400 to-indigo-500 shadow-lg shadow-sky-950/30">
-          <span className="rotate-[40deg] text-xl">💊</span>
+    <aside className="relative overflow-hidden border-b border-slate-800/80 bg-[#06101e] px-4 py-6 lg:min-h-screen lg:border-b-0 lg:border-r">
+      <div className="pointer-events-none absolute -left-20 top-0 h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 right-0 h-72 w-72 rounded-full bg-indigo-500/10 blur-3xl" />
+
+      <div className="relative z-10 flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.03] px-3 py-3 shadow-lg shadow-black/10">
+        <div className="grid h-12 w-12 rotate-[-35deg] place-items-center rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-indigo-500 shadow-lg shadow-cyan-950/30">
+          <span className="rotate-[35deg] text-xl">💊</span>
         </div>
         <div>
-          <p className="text-xl font-black tracking-tight text-sky-400">MediCare AI</p>
-          <p className="mt-0.5 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">Manager Workspace</p>
+          <p className="text-xl font-black tracking-tight text-cyan-300">MediCare AI</p>
+          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Manager Workspace</p>
         </div>
       </div>
 
-      <nav className="mt-9 space-y-1.5">
+      <nav className="relative z-10 mt-8 space-y-1.5">
         {managerNavItems.map((item, index) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.end}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-xl border-l-2 px-4 py-3 text-sm font-medium transition ${
+              `group flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? "border-sky-400 bg-sky-400/10 text-sky-300"
-                  : "border-transparent text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
+                  ? "border-cyan-400/40 bg-gradient-to-r from-cyan-500/15 to-sky-500/5 text-cyan-200 shadow-[0_10px_30px_rgba(6,182,212,.08)]"
+                  : "border-transparent text-slate-400 hover:border-white/5 hover:bg-white/[0.04] hover:text-slate-100"
               }`
             }
           >
-            <span className="w-5 text-center text-base" aria-hidden="true">{item.icon}</span>
-            <span className="min-w-0 flex-1">{index + 1}. {item.label}</span>
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/[0.04] text-base transition group-hover:bg-white/[0.07]" aria-hidden="true">
+              {item.icon}
+            </span>
+            <span className="min-w-0 flex-1 leading-5">{index + 1}. {item.label}</span>
           </NavLink>
         ))}
       </nav>
