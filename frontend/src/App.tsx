@@ -10,7 +10,7 @@ import {
 } from "./pages/CashierPages";
 import { LoginPage } from "./pages/LoginPage";
 import { ManagerAIWorkspacePage } from "./pages/ManagerAIWorkspacePage";
-import { ManagerUsersPage } from "./pages/ManagerOperationalPages";
+import { ManagerUsersCashierPage } from "./pages/ManagerUsersCashierPage";
 import {
   ManagerValidatedExpiryPage,
   ManagerValidatedImportsPage,
@@ -59,7 +59,7 @@ export default function App() {
         <Route path="/manager/lookup" element={<ManagerValidatedLookupPage />} />
         <Route path="/manager/reports" element={<ManagerValidatedReportsPage />} />
         <Route path="/manager/ai" element={<ManagerAIWorkspacePage />} />
-        <Route path="/manager/users" element={<ManagerUsersPage />} />
+        <Route path="/manager/users" element={<ManagerUsersCashierPage />} />
       </Route>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
