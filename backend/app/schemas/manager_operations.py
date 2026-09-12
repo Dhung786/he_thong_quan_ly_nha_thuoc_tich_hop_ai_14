@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-RoleName = Literal["MANAGER", "PHARMACIST", "CUSTOMER"]
+RoleName = Literal["MANAGER", "PHARMACIST", "CASHIER"]
 
 
 class SupplierCreate(BaseModel):
