@@ -3,14 +3,19 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../auth/auth-context";
 import { ManagerSidebar } from "../components/ManagerSidebar";
-import { formatVnd, managerDemoMetrics } from "../lib/demo-data";
-import { healthRequest, medicinesRequest } from "../lib/api";
+import { medicinesRequest } from "../lib/api";
+import { reportSummaryRequest } from "../lib/manager-api";
 
 const roleLabels: Record<string, string> = {
   MANAGER: "Quản lý",
   PHARMACIST: "Dược sĩ",
   CUSTOMER: "Khách hàng",
 };
+
+function formatMoney(value: string | number | null | undefined) {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? `${parsed.toLocaleString("vi-VN")} đ` : "—";
+}
 
 export function DashboardPage() {
   const auth = useAuth();
@@ -19,10 +24,16 @@ export function DashboardPage() {
   const isManager = auth.user?.role === "MANAGER";
   const roleLabel = roleLabels[auth.user?.role ?? ""] ?? auth.user?.role ?? "-";
 
-  const health = useQuery({ queryKey: ["health"], queryFn: healthRequest, retry: false, refetchInterval: 30_000 });
   const medicines = useQuery({
     queryKey: ["manager-dashboard-medicines"],
     queryFn: () => medicinesRequest(accessToken),
+    enabled: isManager && Boolean(accessToken),
+    retry: false,
+  });
+
+  const summary = useQuery({
+    queryKey: ["manager-dashboard-summary"],
+    queryFn: () => reportSummaryRequest(accessToken, 90),
     enabled: isManager && Boolean(accessToken),
     retry: false,
   });
@@ -45,7 +56,7 @@ export function DashboardPage() {
   }
 
   const totalMedicines = medicines.isPending ? "…" : medicines.isError ? "—" : medicines.data?.length ?? 0;
-  const aiConfigured = health.data?.ai === "configured";
+  const summaryData = summary.data;
 
   return (
     <div className="min-h-screen bg-[#0b1730] text-slate-100 lg:grid lg:grid-cols-[330px_1fr]">
@@ -64,34 +75,23 @@ export function DashboardPage() {
         </header>
 
         <main className="p-5 sm:p-8 lg:p-10">
-          <div className="mb-5 flex items-center gap-2 text-xs text-violet-300">
-            <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 font-bold">DEMO</span>
-            <span className="text-slate-500">Các chỉ số doanh thu, tồn kho và hạn dùng bên dưới vẫn là số liệu minh họa cho tới khi giao diện chuyển hoàn toàn sang dữ liệu API.</span>
-          </div>
-
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard label="Doanh thu" value={formatVnd(managerDemoMetrics.revenue)} note={`${managerDemoMetrics.invoicesToday} hóa đơn hôm nay · Demo`} accent="emerald" demo />
-            <MetricCard label="Tổng số thuốc" value={totalMedicines} note="Dữ liệu thật từ danh mục thuốc" />
-            <MetricCard label="Thuốc tồn thấp" value={managerDemoMetrics.lowStockCount} note={`Tổng tồn minh họa: ${managerDemoMetrics.inventoryUnits} đơn vị`} accent="amber" demo />
-            <MetricCard label="Thuốc sắp hết hạn" value={managerDemoMetrics.expiringCount} note="Trong 90 ngày tới · Demo" accent="rose" demo />
+            <MetricCard label="Doanh thu" value={summary.isPending ? "…" : summary.isError ? "—" : formatMoney(summaryData?.revenue)} note={`${summaryData?.finalized_invoice_count ?? 0} hóa đơn đã hoàn tất`} accent="emerald" />
+            <MetricCard label="Tổng số thuốc" value={totalMedicines} note="Số thuốc đang có trong danh mục" />
+            <MetricCard label="Tổng tồn kho" value={summary.isPending ? "…" : summary.isError ? "—" : summaryData?.inventory_units ?? 0} note="Tổng số đơn vị thuốc còn trong kho" accent="amber" />
+            <MetricCard label="Lô sắp hết hạn" value={summary.isPending ? "…" : summary.isError ? "—" : summaryData?.expiring_lots ?? 0} note="Trong 90 ngày tới" accent="rose" />
           </section>
 
           <section className="mt-7 grid gap-5 xl:grid-cols-2">
-            <FeaturePanel title="2. Quản lý thuốc" icon="💊" to="/catalog" status="Dữ liệu thật">Danh sách thuốc, nhóm thuốc và đơn vị tính được lưu trong PostgreSQL.</FeaturePanel>
-            <FeaturePanel title="3. Quản lý nhập thuốc" icon="📥" to="/manager/imports" status="API sẵn sàng">API nhà cung cấp và lô nhập đã có; giao diện demo có thể tiếp tục dùng để nhập thử.</FeaturePanel>
-            <FeaturePanel title="4. Bán thuốc" icon="🧾" to="/manager/sales" status="API sẵn sàng">API hóa đơn hỗ trợ tạo nháp, chốt hóa đơn theo lô được chọn và trừ tồn an toàn.</FeaturePanel>
-            <FeaturePanel title="5. Tồn kho" icon="📦" to="/manager/inventory" status="API sẵn sàng">API tồn kho đọc số lượng còn lại theo từng lô và hỗ trợ lọc theo ngưỡng.</FeaturePanel>
-            <FeaturePanel title="6. Hạn sử dụng" icon="⏳" to="/manager/expiry" status="API sẵn sàng">API thuốc sắp hết hạn và đã hết hạn hoạt động theo số ngày cảnh báo do người dùng truyền vào.</FeaturePanel>
-            <FeaturePanel title="7. Tra cứu thuốc" icon="🔎" to="/manager/lookup" status="Tra cứu nâng cao sẵn sàng">Danh mục thuốc đã có dữ liệu; API tra cứu nâng cao hỗ trợ nhóm, đơn vị, nhà cung cấp và hạn dùng.</FeaturePanel>
-            <FeaturePanel title="8. Báo cáo - Thống kê" icon="📈" to="/manager/reports" status="API sẵn sàng">API báo cáo tổng hợp doanh thu hóa đơn đã chốt, tồn kho và hạn dùng.</FeaturePanel>
-            <FeaturePanel title="9. Trợ lý AI" icon="🤖" to="/manager/ai" status={aiConfigured ? "AI đã cấu hình" : "AI chưa được cấu hình"}>Tóm tắt thông tin thuốc, hỗ trợ báo cáo hạn dùng và hỏi đáp quy trình nội bộ.</FeaturePanel>
-            <FeaturePanel title="10. Tài khoản / Phân quyền" icon="👥" to="/manager/users" status="API sẵn sàng">API quản trị tài khoản hỗ trợ tạo tài khoản, đổi vai trò, khóa/mở khóa và đặt lại mật khẩu.</FeaturePanel>
-          </section>
-
-          <section className="mt-7 grid gap-4 md:grid-cols-3">
-            <StatusCard label="Core application" value={health.data?.core ?? "checking"} />
-            <StatusCard label="PostgreSQL" value={health.data?.database ?? "checking"} />
-            <StatusCard label="Migration" value={health.data?.migration ?? "checking"} />
+            <FeaturePanel title="2. Quản lý thuốc" icon="💊" to="/catalog">Quản lý danh sách thuốc, nhóm thuốc và đơn vị tính.</FeaturePanel>
+            <FeaturePanel title="3. Quản lý nhập thuốc" icon="📥" to="/manager/imports">Thêm nhà cung cấp, tạo lô nhập và theo dõi thông tin nhập thuốc.</FeaturePanel>
+            <FeaturePanel title="4. Bán thuốc" icon="🧾" to="/manager/sales">Tạo hóa đơn, chọn lô bán và hoàn tất giao dịch.</FeaturePanel>
+            <FeaturePanel title="5. Tồn kho" icon="📦" to="/manager/inventory">Theo dõi số lượng tồn theo từng lô và lọc thuốc tồn thấp.</FeaturePanel>
+            <FeaturePanel title="6. Hạn sử dụng" icon="⏳" to="/manager/expiry">Theo dõi các lô sắp hết hạn và đã hết hạn.</FeaturePanel>
+            <FeaturePanel title="7. Tra cứu thuốc" icon="🔎" to="/manager/lookup">Tìm kiếm thuốc theo tên, mã, nhóm, lô và hạn sử dụng.</FeaturePanel>
+            <FeaturePanel title="8. Báo cáo - Thống kê" icon="📈" to="/manager/reports">Theo dõi doanh thu, tồn kho và tình trạng hạn sử dụng.</FeaturePanel>
+            <FeaturePanel title="9. Trợ lý AI" icon="🤖" to="/manager/ai">Tóm tắt thông tin thuốc, hỗ trợ báo cáo hạn dùng và hỏi đáp quy trình nội bộ.</FeaturePanel>
+            <FeaturePanel title="10. Tài khoản / Phân quyền" icon="👥" to="/manager/users">Tạo tài khoản, đổi vai trò, khóa hoặc mở khóa tài khoản và đặt lại mật khẩu.</FeaturePanel>
           </section>
         </main>
       </div>
@@ -99,22 +99,17 @@ export function DashboardPage() {
   );
 }
 
-function MetricCard({ label, value, note, accent = "default", demo = false }: { label: string; value: string | number; note: string; accent?: "default" | "amber" | "emerald" | "rose"; demo?: boolean }) {
+function MetricCard({ label, value, note, accent = "default" }: { label: string; value: string | number; note: string; accent?: "default" | "amber" | "emerald" | "rose" }) {
   const valueClass = accent === "amber" ? "text-amber-400" : accent === "emerald" ? "text-emerald-400" : accent === "rose" ? "text-rose-400" : "text-slate-50";
-  return <div className="rounded-3xl border border-slate-700/70 bg-[#18253a] p-6 shadow-xl shadow-slate-950/10"><div className="flex items-center justify-between gap-2"><p className="text-sm text-slate-400">{label}</p>{demo && <span className="rounded-full bg-violet-500/10 px-2 py-1 text-[10px] font-bold text-violet-300">DEMO</span>}</div><p className={`mt-3 text-3xl font-black ${valueClass}`}>{value}</p><p className="mt-3 text-xs leading-5 text-slate-500">{note}</p></div>;
+  return <div className="rounded-3xl border border-slate-700/70 bg-[#18253a] p-6 shadow-xl shadow-slate-950/10"><p className="text-sm text-slate-400">{label}</p><p className={`mt-3 text-3xl font-black ${valueClass}`}>{value}</p><p className="mt-3 text-xs leading-5 text-slate-500">{note}</p></div>;
 }
 
-function FeaturePanel({ title, icon, to, status, children }: { title: string; icon: string; to: string; status: string; children: string }) {
+function FeaturePanel({ title, icon, to, children }: { title: string; icon: string; to: string; children: string }) {
   return (
     <Link to={to} className="group rounded-3xl border border-slate-700/70 bg-[#18253a] p-6 transition hover:-translate-y-0.5 hover:border-sky-500/50 hover:bg-[#1b2a42]">
-      <div className="flex items-start justify-between gap-4"><div className="flex items-center gap-3"><span className="text-2xl">{icon}</span><h2 className="text-lg font-bold group-hover:text-sky-300">{title}</h2></div><span className="rounded-full border border-slate-700 bg-slate-950/30 px-3 py-1 text-[11px] text-slate-400">{status}</span></div>
+      <div className="flex items-center gap-3"><span className="text-2xl">{icon}</span><h2 className="text-lg font-bold group-hover:text-sky-300">{title}</h2></div>
       <p className="mt-4 text-sm leading-6 text-slate-400">{children}</p>
       <p className="mt-5 text-sm font-semibold text-sky-400">Mở chức năng →</p>
     </Link>
   );
-}
-
-function StatusCard({ label, value }: { label: string; value: string }) {
-  const healthy = value === "ok" || value.startsWith("000");
-  return <div className="rounded-2xl border border-slate-800 bg-slate-950/20 p-5"><p className="text-xs uppercase tracking-wider text-slate-500">{label}</p><div className="mt-3 flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${healthy ? "bg-emerald-400" : "bg-amber-400"}`} /><p className="text-sm font-semibold text-slate-200">{value.replaceAll("_", " ")}</p></div></div>;
 }
