@@ -1,5 +1,5 @@
 import { useAuth } from "../auth/auth-context";
-import { CashierDashboardPage } from "./CashierPages";
+import { CashierDashboardEnhancedPage } from "./CashierDashboardEnhancedPage";
 import { DashboardPage } from "./DashboardPage";
 import { PharmacistDashboardCleanPage } from "./PharmacistDashboardCleanPage";
 
@@ -11,7 +11,7 @@ export function RoleDashboardPage() {
   }
 
   if (auth.user?.role === "CASHIER") {
-    return <CashierDashboardPage />;
+    return <CashierDashboardEnhancedPage />;
   }
 
   return <DashboardPage />;
