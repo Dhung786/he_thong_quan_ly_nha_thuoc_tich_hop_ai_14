@@ -53,3 +53,9 @@ ReactDOM.createRoot(rootElement).render(
     </QueryClientProvider>
   </React.StrictMode>,
 );
+
+// Chạy thêm sau khi React render và theo chu kỳ ngắn để xử lý dữ liệu tải bất đồng bộ
+// từ API/React Query. Việc này chỉ thay đổi chữ hiển thị, không sửa dữ liệu PostgreSQL.
+window.setTimeout(() => cleanDemoLabels(rootElement), 0);
+window.setTimeout(() => cleanDemoLabels(rootElement), 300);
+window.setInterval(() => cleanDemoLabels(rootElement), 1000);
