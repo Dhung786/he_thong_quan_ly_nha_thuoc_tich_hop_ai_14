@@ -27,8 +27,8 @@ class Settings(BaseSettings):
     seed_manager_password: str | None = None
     seed_pharmacist_username: str | None = None
     seed_pharmacist_password: str | None = None
-    seed_customer_username: str | None = None
-    seed_customer_password: str | None = None
+    seed_cashier_username: str | None = None
+    seed_cashier_password: str | None = None
     cors_origins: list[str] = ["http://localhost:5173"]
 
     ai_provider: str = "disabled"
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
         seed_pairs = (
             ("MANAGER", self.seed_manager_username, self.seed_manager_password),
             ("PHARMACIST", self.seed_pharmacist_username, self.seed_pharmacist_password),
-            ("CUSTOMER", self.seed_customer_username, self.seed_customer_password),
+            ("CASHIER", self.seed_cashier_username, self.seed_cashier_password),
         )
         for role_name, username, password in seed_pairs:
             if bool(username) != bool(password):
