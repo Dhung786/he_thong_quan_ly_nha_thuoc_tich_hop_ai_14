@@ -1,8 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { RequireAuth } from "./auth/RequireAuth";
+import { CashierDashboardEnhancedPage } from "./pages/CashierDashboardEnhancedPage";
 import {
-  CashierDashboardPage,
   CashierMedicineLookupPage,
   CashierProfilePage,
 } from "./pages/CashierPages";
@@ -40,7 +40,7 @@ export default function App() {
         <Route path="/dashboard" element={<RoleDashboardPage />} />
         <Route path="/catalog" element={<MedicineCatalogCleanPage />} />
 
-        <Route path="/cashier" element={<CashierDashboardPage />} />
+        <Route path="/cashier" element={<CashierDashboardEnhancedPage />} />
         <Route path="/cashier/sales" element={<CashierEnhancedSalesPage />} />
         <Route path="/cashier/medicines" element={<CashierMedicineLookupPage />} />
         <Route path="/cashier/invoices" element={<CashierEnhancedInvoicesPage />} />
