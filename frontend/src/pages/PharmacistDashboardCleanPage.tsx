@@ -63,8 +63,8 @@ export function PharmacistDashboardCleanPage() {
         <main className="space-y-6 p-5 sm:p-7 lg:p-8">
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <SummaryCard label="Thuốc có thể tra cứu" value={totalMedicines} note="Dữ liệu thật từ PostgreSQL" />
-            <SummaryCard label="Thuốc tồn thấp" value="—" note="Chưa có dữ liệu tồn kho" accent="amber" />
-            <SummaryCard label="Lô sắp hết hạn" value="—" note="Chưa có dữ liệu hạn sử dụng" accent="rose" />
+            <SummaryCard label="Thuốc tồn thấp" value="—" note="Xem chi tiết trong mục Cảnh báo" accent="amber" />
+            <SummaryCard label="Lô sắp hết hạn" value="—" note="Xem chi tiết trong mục Cảnh báo" accent="rose" />
             <SummaryCard label="AI Dược sĩ" value={aiConfigured ? "Sẵn sàng" : "Chưa cấu hình"} note="Không tạo phản hồi giả" accent="cyan" />
           </section>
 
@@ -72,16 +72,16 @@ export function PharmacistDashboardCleanPage() {
             <FeatureCard title="🔎 Tra cứu thuốc" to="/pharmacist/medicines" status="Đã có dữ liệu thật">
               Tìm thuốc theo tên hoặc mã và xem thông tin danh mục đã lưu trong hệ thống.
             </FeatureCard>
-            <FeatureCard title="📦 Tồn kho & lô thuốc" to="/pharmacist/inventory" status="Đang chờ API">
+            <FeatureCard title="📦 Tồn kho & lô thuốc" to="/pharmacist/inventory" status="Đã kết nối API">
               Theo dõi tồn hiện tại, ngưỡng tối thiểu, lô thuốc và hạn sử dụng.
             </FeatureCard>
-            <FeatureCard title="🏢 Nhà cung cấp" to="/pharmacist/suppliers" status="Đang chờ API">
-              Tra cứu và cập nhật thông tin nhà cung cấp theo quyền được cấp.
+            <FeatureCard title="🏢 Nhà cung cấp" to="/pharmacist/suppliers" status="Đã kết nối API">
+              Tra cứu thông tin nhà cung cấp theo quyền Dược sĩ được cấp.
             </FeatureCard>
-            <FeatureCard title="⚠️ Cảnh báo" to="/pharmacist/alerts" status="Đang chờ API">
+            <FeatureCard title="⚠️ Cảnh báo" to="/pharmacist/alerts" status="Đã kết nối API">
               Xem thuốc tồn thấp, thuốc hết hàng, lô sắp hết hạn và lô đã hết hạn.
             </FeatureCard>
-            <FeatureCard title="🧾 Hỗ trợ bán thuốc" to="/pharmacist/sales-support" status="Đang chờ API">
+            <FeatureCard title="🧾 Hỗ trợ bán thuốc" to="/pharmacist/sales-support" status="Đã kết nối API">
               Kiểm tra tồn, tra cứu thuốc và chuẩn bị thông tin hỗ trợ bán thuốc.
             </FeatureCard>
             <FeatureCard title="🤖 AI Dược sĩ" to="/pharmacist/ai" status={aiConfigured ? "AI đã cấu hình" : "AI chưa cấu hình"}>
@@ -90,11 +90,11 @@ export function PharmacistDashboardCleanPage() {
             <FeatureCard title="📚 Quy trình nội bộ" to="/pharmacist/process" status="Đang chờ dữ liệu nội bộ">
               Tra cứu quy trình bán thuốc, kiểm kê và xử lý thuốc hết hạn.
             </FeatureCard>
-            <FeatureCard title="📈 Báo cáo" to="/pharmacist/reports" status="Đang chờ API">
+            <FeatureCard title="📈 Báo cáo" to="/pharmacist/reports" status="Đã kết nối API">
               Xem báo cáo tồn kho, thuốc tồn thấp và thuốc sắp hết hạn.
             </FeatureCard>
             <FeatureCard title="⚙️ Hồ sơ" to="/pharmacist/profile" status="Đang chờ API hồ sơ">
-              Xem thông tin tài khoản, vai trò và đổi mật khẩu.
+              Xem thông tin tài khoản, vai trò và các thiết lập hồ sơ được hỗ trợ.
             </FeatureCard>
           </section>
 
