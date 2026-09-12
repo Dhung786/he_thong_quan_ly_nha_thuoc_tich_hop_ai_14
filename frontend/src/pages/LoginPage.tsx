@@ -65,20 +65,11 @@ export function LoginPage() {
       <div className="mx-auto grid min-h-[80vh] max-w-6xl items-center gap-10 lg:grid-cols-2">
         <section>
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-400">
-            Pharmacy AI · Nhóm 14
+            MediCare AI · Nhóm 14
           </p>
           <h1 className="mt-4 max-w-xl text-4xl font-bold leading-tight sm:text-5xl">
             Hệ thống quản lý nhà thuốc có tích hợp AI
           </h1>
-          <p className="mt-5 max-w-xl text-lg leading-8 text-slate-400">
-            Đăng nhập bằng tài khoản Quản lý, Dược sĩ hoặc Thu ngân. Quyền nghiệp vụ được
-            backend kiểm tra theo vai trò được cấp.
-          </p>
-          <div className="mt-8 grid max-w-lg gap-3 sm:grid-cols-3">
-            <InfoCard title="Quản lý" text="Quản trị hệ thống" />
-            <InfoCard title="Dược sĩ" text="Nghiệp vụ nhà thuốc" />
-            <InfoCard title="Thu ngân" text="Bán hàng & hóa đơn" />
-          </div>
         </section>
 
         <section className="rounded-3xl border border-slate-800 bg-slate-900/90 p-6 shadow-2xl sm:p-8">
@@ -134,14 +125,5 @@ export function LoginPage() {
         </section>
       </div>
     </main>
-  );
-}
-
-function InfoCard({ title, text }: { title: string; text: string }) {
-  return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-      <p className="text-xs uppercase tracking-wider text-slate-500">{title}</p>
-      <p className="mt-1 text-sm font-medium text-slate-200">{text}</p>
-    </div>
   );
 }
