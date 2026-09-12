@@ -13,6 +13,11 @@ body {
   min-height: 100vh;
 }
 
+/* Ẩn các nhãn kỹ thuật kiểu "API ... đã kết nối" khỏi giao diện người dùng. */
+header > div:first-child > p.text-emerald-400 {
+  display: none;
+}
+
 @layer components {
   .input {
     @apply h-[42px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-slate-100 outline-none transition focus:border-emerald-500;
