@@ -3,11 +3,15 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { RequireAuth } from "./auth/RequireAuth";
 import {
   CashierDashboardPage,
-  CashierInvoicesPage,
   CashierMedicineLookupPage,
   CashierProfilePage,
-  CashierSalesPage,
 } from "./pages/CashierPages";
+import {
+  CashierAssistantPage,
+  CashierEnhancedInvoicesPage,
+  CashierEnhancedSalesPage,
+  CashierShiftSummaryPage,
+} from "./pages/CashierEnhancedPages";
 import { LoginPage } from "./pages/LoginPage";
 import { ManagerAIWorkspacePage } from "./pages/ManagerAIWorkspacePage";
 import { ManagerUsersCashierPage } from "./pages/ManagerUsersCashierPage";
@@ -37,9 +41,11 @@ export default function App() {
         <Route path="/catalog" element={<MedicineCatalogCleanPage />} />
 
         <Route path="/cashier" element={<CashierDashboardPage />} />
-        <Route path="/cashier/sales" element={<CashierSalesPage />} />
+        <Route path="/cashier/sales" element={<CashierEnhancedSalesPage />} />
         <Route path="/cashier/medicines" element={<CashierMedicineLookupPage />} />
-        <Route path="/cashier/invoices" element={<CashierInvoicesPage />} />
+        <Route path="/cashier/invoices" element={<CashierEnhancedInvoicesPage />} />
+        <Route path="/cashier/shift" element={<CashierShiftSummaryPage />} />
+        <Route path="/cashier/assistant" element={<CashierAssistantPage />} />
         <Route path="/cashier/profile" element={<CashierProfilePage />} />
 
         <Route path="/pharmacist/medicines" element={<PharmacistMedicineLookupPage />} />
