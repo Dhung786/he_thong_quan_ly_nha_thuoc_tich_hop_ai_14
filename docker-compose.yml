@@ -34,7 +34,7 @@ services:
       SEED_CUSTOMER_USERNAME: ${SEED_CUSTOMER_USERNAME:-customer}
       SEED_CUSTOMER_PASSWORD: ${SEED_CUSTOMER_PASSWORD:-Customer123!ChangeMe}
       CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:5173"]}
-      AI_PROVIDER: ${AI_PROVIDER:-disabled}
+      AI_PROVIDER: ${AI_PROVIDER:-demo}
       AI_API_KEY: ${AI_API_KEY:-}
       AI_BASE_URL: ${AI_BASE_URL:-}
       AI_MODEL: ${AI_MODEL:-}

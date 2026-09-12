@@ -10,6 +10,8 @@ from app.api.catalog import router as catalog_router
 from app.api.manager_ai import router as manager_ai_router
 from app.api.manager_operations import router as manager_operations_router
 from app.api.medicine_lookup import router as medicine_lookup_router
+from app.api.pharmacist_ai import router as pharmacist_ai_router
+from app.api.pharmacist_operations import router as pharmacist_operations_router
 from app.core.config import settings
 from app.core.database import engine
 from app.core.errors import ApplicationConflict
@@ -26,8 +28,8 @@ app = FastAPI(
     version="0.5.0",
     description=(
         "API for the Group 14 pharmacy management system with AI integration. "
-        "Manager APIs cover suppliers, batches, inventory, expiry, invoices, reports, "
-        "account administration, medicine lookup and guarded AI assistance."
+        "Manager and pharmacist APIs cover medicine lookup, inventory, expiry, sales, "
+        "reports and guarded AI assistance according to role permissions."
     ),
 )
 app.add_middleware(CorrelationIdMiddleware)
@@ -43,6 +45,8 @@ app.include_router(catalog_router)
 app.include_router(medicine_lookup_router)
 app.include_router(manager_operations_router)
 app.include_router(manager_ai_router)
+app.include_router(pharmacist_operations_router)
+app.include_router(pharmacist_ai_router)
 
 
 def _correlation_id(request: Request) -> str:
