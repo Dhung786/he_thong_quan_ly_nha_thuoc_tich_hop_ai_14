@@ -17,6 +17,7 @@ import { PharmacistAIWorkspacePage } from "./pages/PharmacistAIWorkspacePage";
 import { PharmacistFeaturePage } from "./pages/PharmacistFeaturePage";
 import { PharmacistMedicineLookupPage } from "./pages/PharmacistMedicineLookupPage";
 import { PharmacistProfilePage } from "./pages/PharmacistProfilePage";
+import { PharmacistSuppliersPage } from "./pages/PharmacistSuppliersPage";
 import { RoleDashboardPage } from "./pages/RoleDashboardPage";
 
 export default function App() {
@@ -29,7 +30,7 @@ export default function App() {
 
         <Route path="/pharmacist/medicines" element={<PharmacistMedicineLookupPage />} />
         <Route path="/pharmacist/inventory" element={<PharmacistFeaturePage title="Tồn kho & lô thuốc" description="Theo dõi số lượng tồn, ngưỡng tồn tối thiểu, thông tin lô và hạn sử dụng để hỗ trợ tra cứu và nghiệp vụ hằng ngày." status="API tồn kho và lô thuốc đã sẵn sàng" />} />
-        <Route path="/pharmacist/suppliers" element={<PharmacistFeaturePage title="Nhà cung cấp" description="Tra cứu thông tin nhà cung cấp thuốc theo quyền Dược sĩ được cấp." status="API nhà cung cấp đã sẵn sàng" />} />
+        <Route path="/pharmacist/suppliers" element={<PharmacistSuppliersPage />} />
         <Route path="/pharmacist/alerts" element={<PharmacistFeaturePage title="Cảnh báo" description="Theo dõi thuốc tồn thấp, thuốc hết hàng, lô sắp hết hạn và lô đã hết hạn." status="API cảnh báo tồn kho và hạn dùng đã sẵn sàng" />} />
         <Route path="/pharmacist/sales-support" element={<PharmacistFeaturePage title="Hỗ trợ bán thuốc" description="Tra cứu thuốc, kiểm tra tồn và chuẩn bị thông tin để hỗ trợ quá trình bán thuốc." status="API tra cứu tồn kho đã sẵn sàng" />} />
         <Route path="/pharmacist/ai" element={<PharmacistAIWorkspacePage />} />
