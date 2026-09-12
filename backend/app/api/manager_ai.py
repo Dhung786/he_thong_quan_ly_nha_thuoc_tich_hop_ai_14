@@ -31,12 +31,12 @@ from app.services.ai_scope_guard import (
 )
 
 router = APIRouter(prefix="/api/v1/manager/ai", tags=["manager-ai"])
-ManagerUser = Annotated[User, Depends(require_roles("MANAGER"))]
+AIUser = Annotated[User, Depends(require_roles("MANAGER", "PHARMACIST"))]
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
 DISCLAIMER = (
-    "Nội dung AI chỉ dùng để tham khảo trong quản lý nhà thuốc; không thay thế quyết định chuyên môn "
-    "của dược sĩ hoặc bác sĩ và không tự động thay đổi dữ liệu nghiệp vụ."
+    "Nội dung AI chỉ dùng để tham khảo trong quản lý nhà thuốc; không thay thế quyết định "
+    "chuyên môn của dược sĩ hoặc bác sĩ và không tự động thay đổi dữ liệu nghiệp vụ."
 )
 
 SYSTEM_SAFETY = """
@@ -45,6 +45,10 @@ Không chẩn đoán bệnh, không kê đơn, không đề xuất liều dùng 
 Không được nói rằng bạn đã thay đổi tồn kho, lô thuốc, hóa đơn, tài khoản hoặc cơ sở dữ liệu.
 Nếu thiếu dữ liệu, hãy nói rõ là chưa đủ dữ liệu. Trả lời ngắn gọn, có cấu trúc, bằng tiếng Việt.
 """.strip()
+
+
+def _local_demo_available() -> bool:
+    return settings.app_env.strip().lower() != "production"
 
 
 def _provider_error(exc: Exception) -> HTTPException:
@@ -78,12 +82,90 @@ def _safe_response(text: str, provider: str, model: str | None) -> AITextRespons
     )
 
 
+async def _generate_or_local(*, prompt: str, local_text: str) -> AITextResponse:
+    if provider_is_configured():
+        try:
+            result = await generate_ai_text(
+                system_prompt=SYSTEM_SAFETY,
+                user_prompt=prompt,
+            )
+            return _safe_response(result.text, result.provider, result.model)
+        except AIProviderFailure as exc:
+            if not _local_demo_available():
+                raise _provider_error(exc) from exc
+
+    if _local_demo_available():
+        return _safe_response(local_text, "local_demo", "rule-based-v1")
+
+    raise _provider_error(AIProviderUnavailable("AI provider is not configured"))
+
+
+def _local_process_answer(message: str) -> str:
+    normalized = " ".join(message.lower().split())
+
+    if "hết hạn" in normalized or "hạn sử dụng" in normalized:
+        return (
+            "Quy trình tham khảo về hạn sử dụng:\n"
+            "1. Mở mục Cảnh báo hoặc Hạn sử dụng.\n"
+            "2. Lọc các lô sắp hết hạn theo khoảng ngày cần kiểm tra.\n"
+            "3. Đối chiếu mã thuốc, mã lô, tồn hiện tại và ngày hết hạn.\n"
+            "4. Tách riêng lô đã hết hạn khỏi luồng bán thuốc và báo người phụ trách xử lý.\n"
+            "5. Lưu lại kết quả kiểm tra theo quy trình nội bộ của nhà thuốc."
+        )
+
+    if "kiểm kê" in normalized or "tồn kho" in normalized:
+        return (
+            "Quy trình tham khảo về kiểm kê tồn kho:\n"
+            "1. Tra cứu tồn theo thuốc và theo từng lô.\n"
+            "2. So sánh số lượng thực tế với số lượng trên hệ thống.\n"
+            "3. Kiểm tra riêng các lô tồn thấp, hết hàng hoặc gần hết hạn.\n"
+            "4. Ghi nhận chênh lệch để người có quyền xác minh trước khi điều chỉnh dữ liệu."
+        )
+
+    if "bán thuốc" in normalized or "hóa đơn" in normalized:
+        return (
+            "Quy trình tham khảo về bán thuốc:\n"
+            "1. Tra cứu đúng thuốc và lô còn hạn sử dụng.\n"
+            "2. Kiểm tra số lượng tồn khả dụng của lô được chọn.\n"
+            "3. Thêm thuốc vào hóa đơn và kiểm tra số lượng, đơn giá, thành tiền.\n"
+            "4. Người có quyền xác nhận giao dịch mới thực hiện chốt hóa đơn.\n"
+            "5. Sau khi chốt, kiểm tra lại tồn kho và trạng thái hóa đơn."
+        )
+
+    if "nhập thuốc" in normalized or "nhà cung cấp" in normalized or "lô" in normalized:
+        return (
+            "Quy trình tham khảo về nhập thuốc và lô:\n"
+            "1. Chọn nhà cung cấp và thuốc cần nhập.\n"
+            "2. Nhập mã lô, số lượng, ngày nhập, hạn sử dụng, giá nhập và giá bán.\n"
+            "3. Kiểm tra dữ liệu trước khi lưu.\n"
+            "4. Sau khi lưu, tra cứu lại lô để xác nhận số lượng và hạn sử dụng."
+        )
+
+    return (
+        "Tôi có thể hỗ trợ các quy trình nội bộ về thuốc, lô nhập, hạn sử dụng, tồn kho, "
+        "nhà cung cấp, bán thuốc, hóa đơn, báo cáo và phân quyền. Hãy nêu rõ quy trình bạn "
+        "muốn xem để nhận hướng dẫn từng bước."
+    )
+
+
 @router.get("/status", response_model=AIStatusResponse)
-async def ai_status(_: ManagerUser) -> AIStatusResponse:
+async def ai_status(_: AIUser) -> AIStatusResponse:
+    external_ready = provider_is_configured()
+    local_ready = _local_demo_available()
+    if external_ready:
+        provider = settings.ai_provider
+        model = settings.ai_model
+    elif local_ready:
+        provider = "local_demo"
+        model = "rule-based-v1"
+    else:
+        provider = settings.ai_provider
+        model = settings.ai_model
+
     return AIStatusResponse(
-        provider=settings.ai_provider,
-        model=settings.ai_model,
-        configured=provider_is_configured(),
+        provider=provider,
+        model=model,
+        configured=external_ready or local_ready,
         scope_guard="enabled",
     )
 
@@ -91,7 +173,7 @@ async def ai_status(_: ManagerUser) -> AIStatusResponse:
 @router.post("/medicine-summary", response_model=AITextResponse)
 async def medicine_summary(
     payload: MedicineSummaryRequest,
-    _: ManagerUser,
+    _: AIUser,
     session: DbSession,
 ) -> AITextResponse:
     medicine_result = await session.execute(
@@ -135,17 +217,14 @@ async def medicine_summary(
         "không bổ sung công dụng, chỉ định, chống chỉ định hay liều dùng từ kiến thức bên ngoài.\n\n"
         + "\n".join(facts)
     )
-    try:
-        result = await generate_ai_text(system_prompt=SYSTEM_SAFETY, user_prompt=prompt)
-    except (AIProviderUnavailable, AIProviderFailure) as exc:
-        raise _provider_error(exc) from exc
-    return _safe_response(result.text, result.provider, result.model)
+    local_text = "TÓM TẮT DỮ LIỆU THUỐC\n" + "\n".join(f"- {fact}" for fact in facts)
+    return await _generate_or_local(prompt=prompt, local_text=local_text)
 
 
 @router.post("/expiry-report", response_model=AITextResponse)
 async def expiry_report(
     payload: ExpiryReportRequest,
-    _: ManagerUser,
+    _: AIUser,
     session: DbSession,
 ) -> AITextResponse:
     today = date.today()
@@ -173,29 +252,38 @@ async def expiry_report(
         lines = ["- Không có lô còn hàng nào hết hạn trong khoảng đã chọn."]
 
     prompt = (
-        f"Hãy tạo báo cáo quản lý thuốc sắp hết hạn trong {payload.warning_days} ngày, tính từ {today.isoformat()}. "
-        "Nêu số lượng lô cần chú ý, sắp xếp ưu tiên theo ngày hết hạn và gợi ý các bước kiểm tra nội bộ "
-        "mà không tự động thay đổi dữ liệu.\n\nDữ liệu:\n"
+        f"Hãy tạo báo cáo quản lý thuốc sắp hết hạn trong {payload.warning_days} ngày, "
+        f"tính từ {today.isoformat()}. Nêu số lượng lô cần chú ý, sắp xếp ưu tiên theo ngày "
+        "hết hạn và gợi ý các bước kiểm tra nội bộ mà không tự động thay đổi dữ liệu.\n\n"
+        "Dữ liệu:\n"
         + "\n".join(lines)
     )
-    try:
-        ai_result = await generate_ai_text(system_prompt=SYSTEM_SAFETY, user_prompt=prompt)
-    except (AIProviderUnavailable, AIProviderFailure) as exc:
-        raise _provider_error(exc) from exc
-    return _safe_response(ai_result.text, ai_result.provider, ai_result.model)
+    local_text = (
+        f"BÁO CÁO HẠN SỬ DỤNG - {payload.warning_days} NGÀY\n"
+        f"- Ngày kiểm tra: {today.isoformat()}\n"
+        f"- Số lô cần chú ý: {len(rows)}\n\n"
+        "DANH SÁCH ƯU TIÊN:\n"
+        + "\n".join(lines)
+        + "\n\nGỢI Ý KIỂM TRA NỘI BỘ:\n"
+        "1. Đối chiếu tồn thực tế của từng lô.\n"
+        "2. Kiểm tra lại ngày hết hạn trên bao bì.\n"
+        "3. Tách riêng lô đã hết hạn hoặc có dấu hiệu bất thường.\n"
+        "4. Người phụ trách quyết định xử lý theo quy trình của nhà thuốc."
+    )
+    return await _generate_or_local(prompt=prompt, local_text=local_text)
 
 
 @router.post("/internal-chat", response_model=AITextResponse)
 async def internal_chat(
     payload: InternalChatRequest,
-    _: ManagerUser,
+    _: AIUser,
 ) -> AITextResponse:
     decision = validate_internal_chat_input(payload.message)
     if not decision.allowed:
         return AITextResponse(
             answer=safe_scope_rejection(decision.reason),
-            provider=settings.ai_provider,
-            model=settings.ai_model,
+            provider="local_demo" if _local_demo_available() else settings.ai_provider,
+            model="rule-based-v1" if _local_demo_available() else settings.ai_model,
             scope_guard="blocked_input",
             disclaimer=DISCLAIMER,
         )
@@ -211,9 +299,6 @@ Các phạm vi quy trình được phép giải thích:
 - Quản trị tài khoản theo quyền MANAGER.
 AI chỉ giải thích quy trình và không thực hiện thao tác ghi dữ liệu.
 """.strip()
-    prompt = f"{process_context}\n\nCâu hỏi của Quản lý: {payload.message}"
-    try:
-        result = await generate_ai_text(system_prompt=SYSTEM_SAFETY, user_prompt=prompt)
-    except (AIProviderUnavailable, AIProviderFailure) as exc:
-        raise _provider_error(exc) from exc
-    return _safe_response(result.text, result.provider, result.model)
+    prompt = f"{process_context}\n\nCâu hỏi của người dùng hệ thống: {payload.message}"
+    local_text = _local_process_answer(payload.message)
+    return await _generate_or_local(prompt=prompt, local_text=local_text)
