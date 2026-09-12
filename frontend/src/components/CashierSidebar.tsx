@@ -5,6 +5,8 @@ const items = [
   ["🧾", "Bán thuốc tại quầy", "/cashier/sales"],
   ["🔎", "Tra cứu thuốc", "/cashier/medicines"],
   ["📋", "Hóa đơn của tôi", "/cashier/invoices"],
+  ["📈", "Tổng kết ca", "/cashier/shift"],
+  ["🤖", "AI hỗ trợ", "/cashier/assistant"],
   ["⚙️", "Hồ sơ", "/cashier/profile"],
 ] as const;
 
