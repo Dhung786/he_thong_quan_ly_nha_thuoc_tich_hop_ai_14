@@ -87,24 +87,14 @@ export function PharmacistAIWorkspacePage({ processOnly = false }: { processOnly
         <main className="p-5 sm:p-8 lg:p-10">
           <div className="mx-auto max-w-6xl space-y-6">
             <section className="rounded-3xl border border-slate-700/70 bg-[#18253a] p-7 sm:p-9">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-400">DƯỢC SĨ · AI CÓ KIỂM SOÁT</p>
-                  <h2 className="mt-2 text-3xl font-bold">{processOnly ? "Hỏi đáp quy trình nhà thuốc" : "Trợ lý AI cho Dược sĩ"}</h2>
-                  <p className="mt-3 max-w-3xl leading-7 text-slate-400">
-                    {processOnly
-                      ? "Hỏi các quy trình nội bộ như kiểm kê, kiểm tra lô, xử lý thuốc hết hạn và thao tác nghiệp vụ được phép."
-                      : "Tóm tắt dữ liệu thuốc, tạo báo cáo lô sắp hết hạn và hỏi đáp quy trình nội bộ dựa trên dữ liệu hệ thống."}
-                  </p>
-                </div>
-                <div className={`rounded-2xl border px-5 py-4 ${configured ? "border-emerald-500/30 bg-emerald-500/10" : "border-amber-500/30 bg-amber-500/10"}`}>
-                  <p className={`text-sm font-bold ${configured ? "text-emerald-300" : "text-amber-200"}`}>
-                    {configured ? "AI sẵn sàng" : "AI chưa được cấu hình"}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-400">Provider: {status?.provider ?? "đang kiểm tra"}</p>
-                  <p className="text-xs text-slate-400">Model: {status?.model ?? "chưa chọn"}</p>
-                  <p className="text-xs text-cyan-300">Scope Guard: {status?.scope_guard ?? "đang kiểm tra"}</p>
-                </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-400">DƯỢC SĨ · AI CÓ KIỂM SOÁT</p>
+                <h2 className="mt-2 text-3xl font-bold">{processOnly ? "Hỏi đáp quy trình nhà thuốc" : "Trợ lý AI cho Dược sĩ"}</h2>
+                <p className="mt-3 max-w-3xl leading-7 text-slate-400">
+                  {processOnly
+                    ? "Hỏi các quy trình nội bộ như kiểm kê, kiểm tra lô, xử lý thuốc hết hạn và thao tác nghiệp vụ được phép."
+                    : "Tóm tắt dữ liệu thuốc, tạo báo cáo lô sắp hết hạn và hỏi đáp quy trình nội bộ dựa trên dữ liệu hệ thống."}
+                </p>
               </div>
             </section>
 
