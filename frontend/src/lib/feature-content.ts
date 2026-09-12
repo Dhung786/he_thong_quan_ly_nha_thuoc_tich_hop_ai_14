@@ -56,9 +56,10 @@ export const pharmacistFeatureContent: Record<string, FeatureContent> = {
     columns: ["Thuốc", "Lô", "Tồn", "Hạn sử dụng", "Trạng thái"],
   },
   "Nhà cung cấp": {
-    actions: ["Tra cứu", "Thêm nhà cung cấp", "Cập nhật thông tin"],
+    actions: ["Xem danh sách", "Tra cứu", "Lọc có liên hệ"],
     fields: ["Tên nhà cung cấp", "Số điện thoại", "Địa chỉ", "Ghi chú"],
     columns: ["Nhà cung cấp", "Liên hệ", "Địa chỉ", "Trạng thái"],
+    note: "Dược sĩ được tra cứu nhà cung cấp. Thêm và cập nhật nhà cung cấp vẫn thuộc quyền Quản lý.",
   },
   "Cảnh báo": {
     actions: ["Xem tồn thấp", "Xem sắp hết hạn", "Xem đã hết hạn"],
@@ -87,8 +88,9 @@ export const pharmacistFeatureContent: Record<string, FeatureContent> = {
     columns: ["Chỉ số", "Giá trị", "Khoảng thời gian", "Ghi chú"],
   },
   "Hồ sơ": {
-    actions: ["Xem thông tin", "Đổi mật khẩu"],
+    actions: ["Xem thông tin"],
     fields: ["Tên đăng nhập", "Vai trò", "Trạng thái tài khoản"],
     columns: ["Thông tin", "Giá trị"],
+    note: "Chức năng đổi mật khẩu sẽ chỉ bật khi có API đổi mật khẩu cho chính tài khoản Dược sĩ.",
   },
 };

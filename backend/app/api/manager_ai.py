@@ -31,7 +31,7 @@ from app.services.ai_scope_guard import (
 )
 
 router = APIRouter(prefix="/api/v1/manager/ai", tags=["manager-ai"])
-ManagerUser = Annotated[User, Depends(require_roles("MANAGER"))]
+AIUser = Annotated[User, Depends(require_roles("MANAGER", "PHARMACIST"))]
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
 DISCLAIMER = (
@@ -79,7 +79,7 @@ def _safe_response(text: str, provider: str, model: str | None) -> AITextRespons
 
 
 @router.get("/status", response_model=AIStatusResponse)
-async def ai_status(_: ManagerUser) -> AIStatusResponse:
+async def ai_status(_: AIUser) -> AIStatusResponse:
     return AIStatusResponse(
         provider=settings.ai_provider,
         model=settings.ai_model,
@@ -91,7 +91,7 @@ async def ai_status(_: ManagerUser) -> AIStatusResponse:
 @router.post("/medicine-summary", response_model=AITextResponse)
 async def medicine_summary(
     payload: MedicineSummaryRequest,
-    _: ManagerUser,
+    _: AIUser,
     session: DbSession,
 ) -> AITextResponse:
     medicine_result = await session.execute(
@@ -145,7 +145,7 @@ async def medicine_summary(
 @router.post("/expiry-report", response_model=AITextResponse)
 async def expiry_report(
     payload: ExpiryReportRequest,
-    _: ManagerUser,
+    _: AIUser,
     session: DbSession,
 ) -> AITextResponse:
     today = date.today()
@@ -188,7 +188,7 @@ async def expiry_report(
 @router.post("/internal-chat", response_model=AITextResponse)
 async def internal_chat(
     payload: InternalChatRequest,
-    _: ManagerUser,
+    user: AIUser,
 ) -> AITextResponse:
     decision = validate_internal_chat_input(payload.message)
     if not decision.allowed:
@@ -207,11 +207,11 @@ Các phạm vi quy trình được phép giải thích:
 - Theo dõi tồn kho và cảnh báo tồn thấp theo ngưỡng do người dùng chọn.
 - Theo dõi lô sắp hết hạn hoặc đã hết hạn theo khoảng ngày do người dùng chọn.
 - Bán thuốc bằng hóa đơn có chọn lô cụ thể; AI không tự chọn FIFO/FEFO và không tự chốt hóa đơn.
-- Báo cáo doanh thu từ hóa đơn đã chốt, tồn kho và hạn sử dụng.
-- Quản trị tài khoản theo quyền MANAGER.
+- Báo cáo tồn kho và hạn sử dụng phục vụ nghiệp vụ nội bộ.
+- Quản trị tài khoản chỉ thuộc quyền MANAGER.
 AI chỉ giải thích quy trình và không thực hiện thao tác ghi dữ liệu.
 """.strip()
-    prompt = f"{process_context}\n\nCâu hỏi của Quản lý: {payload.message}"
+    prompt = f"{process_context}\n\nCâu hỏi của {user.role}: {payload.message}"
     try:
         result = await generate_ai_text(system_prompt=SYSTEM_SAFETY, user_prompt=prompt)
     except (AIProviderUnavailable, AIProviderFailure) as exc:
