@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import require_roles
+from app.api.pharmacist_ai import router as pharmacist_ai_router
+from app.api.pharmacist_operations import router as pharmacist_operations_router
 from app.core.database import get_db
 from app.models.auth import User
 from app.models.catalog import Medicine
@@ -49,3 +51,7 @@ async def lookup_medicines(
 
     result = await session.execute(statement)
     return [_medicine_response(item) for item in result.scalars().all()]
+
+
+router.include_router(pharmacist_operations_router)
+router.include_router(pharmacist_ai_router)
