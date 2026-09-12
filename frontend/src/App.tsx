@@ -16,6 +16,7 @@ import { MedicineCatalogCleanPage } from "./pages/MedicineCatalogCleanPage";
 import { PharmacistAIWorkspacePage } from "./pages/PharmacistAIWorkspacePage";
 import { PharmacistFeaturePage } from "./pages/PharmacistFeaturePage";
 import { PharmacistMedicineLookupPage } from "./pages/PharmacistMedicineLookupPage";
+import { PharmacistProfilePage } from "./pages/PharmacistProfilePage";
 import { RoleDashboardPage } from "./pages/RoleDashboardPage";
 
 export default function App() {
@@ -34,7 +35,7 @@ export default function App() {
         <Route path="/pharmacist/ai" element={<PharmacistAIWorkspacePage />} />
         <Route path="/pharmacist/process" element={<PharmacistAIWorkspacePage processOnly />} />
         <Route path="/pharmacist/reports" element={<PharmacistFeaturePage title="Báo cáo" description="Xem các báo cáo phục vụ nghiệp vụ như tồn kho, tồn thấp và thuốc sắp hết hạn." status="API báo cáo nghiệp vụ đã sẵn sàng" />} />
-        <Route path="/pharmacist/profile" element={<PharmacistFeaturePage title="Hồ sơ" description="Xem thông tin tài khoản Dược sĩ và các thiết lập hồ sơ được hỗ trợ." status="Thông tin tài khoản hiện tại" />} />
+        <Route path="/pharmacist/profile" element={<PharmacistProfilePage />} />
 
         <Route path="/manager/imports" element={<ManagerValidatedImportsPage />} />
         <Route path="/manager/sales" element={<ManagerValidatedSalesPage />} />
