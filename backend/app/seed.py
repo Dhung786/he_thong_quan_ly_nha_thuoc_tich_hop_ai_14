@@ -156,7 +156,10 @@ async def _demo_invoice(
 
     created_at = datetime.now(UTC) - timedelta(days=created_days_ago)
     total = sum(
-        (batch.selling_price * quantity for batch, quantity in zip(batches, quantities, strict=True)),
+        (
+            batch.selling_price * quantity
+            for batch, quantity in zip(batches, quantities, strict=True)
+        ),
         Decimal("0"),
     )
     invoice = Invoice(
