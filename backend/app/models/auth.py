@@ -9,11 +9,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 
-ROLE_NAMES = ("MANAGER", "PHARMACIST", "CUSTOMER")
+ROLE_NAMES = ("MANAGER", "PHARMACIST", "CASHIER")
 ROLE_DISPLAY_NAMES = {
     "MANAGER": "Quản lý",
     "PHARMACIST": "Dược sĩ",
-    "CUSTOMER": "Khách hàng",
+    "CASHIER": "Thu ngân",
 }
 
 
@@ -21,7 +21,7 @@ class Role(Base):
     __tablename__ = "roles"
     __table_args__ = (
         CheckConstraint(
-            "name IN ('MANAGER', 'PHARMACIST', 'CUSTOMER')",
+            "name IN ('MANAGER', 'PHARMACIST', 'CASHIER')",
             name="ck_roles_supported_name",
         ),
     )
