@@ -85,22 +85,12 @@ export function ManagerAIWorkspacePage() {
         <main className="p-5 sm:p-8 lg:p-10">
           <div className="mx-auto max-w-6xl space-y-6">
             <section className="rounded-3xl border border-slate-700/70 bg-[#18253a] p-7 shadow-2xl shadow-slate-950/20 sm:p-9">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-400">Cấu hình AI</p>
-                  <h2 className="mt-2 text-3xl font-bold">AI cho phần Quản lý</h2>
-                  <p className="mt-3 max-w-3xl leading-7 text-slate-400">
-                    Tóm tắt thông tin quản lý thuốc, tạo báo cáo thuốc sắp hết hạn và hỏi đáp quy trình nội bộ. AI không tự thay đổi tồn kho, lô thuốc, hóa đơn hoặc tài khoản.
-                  </p>
-                </div>
-                <div className={`rounded-2xl border px-5 py-4 ${configured ? "border-emerald-500/30 bg-emerald-500/10" : "border-amber-500/30 bg-amber-500/10"}`}>
-                  <p className={`text-sm font-bold ${configured ? "text-emerald-300" : "text-amber-200"}`}>
-                    {configured ? "AI đã được cấu hình" : "AI provider chưa được cấu hình"}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-400">Provider: {status?.provider ?? "đang kiểm tra"}</p>
-                  <p className="text-xs text-slate-400">Model: {status?.model ?? "chưa chọn"}</p>
-                  <p className="text-xs text-sky-300">Scope Guard: {status?.scope_guard ?? "đang kiểm tra"}</p>
-                </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-400">Trợ lý AI</p>
+                <h2 className="mt-2 text-3xl font-bold">AI cho phần Quản lý</h2>
+                <p className="mt-3 max-w-3xl leading-7 text-slate-400">
+                  Tóm tắt thông tin quản lý thuốc, tạo báo cáo thuốc sắp hết hạn và hỏi đáp quy trình nội bộ. AI không tự thay đổi tồn kho, lô thuốc, hóa đơn hoặc tài khoản.
+                </p>
               </div>
             </section>
 
@@ -122,7 +112,7 @@ export function ManagerAIWorkspacePage() {
 
               <div className="rounded-2xl border border-slate-700 bg-[#142238] p-5">
                 <h3 className="text-lg font-bold">AI báo cáo thuốc sắp hết hạn</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-400">Dữ liệu lô và tồn kho được lấy từ PostgreSQL; AI chỉ tổng hợp và nêu các điểm cần chú ý.</p>
+                <p className="mt-2 text-sm leading-6 text-slate-400">Dữ liệu lô và tồn kho được lấy từ hệ thống; AI chỉ tổng hợp và nêu các điểm cần chú ý.</p>
                 <label className="mt-5 block text-sm font-semibold text-slate-300">Khoảng cảnh báo (ngày)</label>
                 <input type="number" min={1} max={365} value={warningDays} onChange={(event) => setWarningDays(event.target.value)} className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/50 px-3 py-2.5" />
                 <button disabled={!configured || busy || !accessToken} onClick={() => accessToken && void run(() => managerExpiryAIReportRequest(accessToken, Number(warningDays)))} className="mt-5 w-full rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-bold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40">
@@ -143,7 +133,7 @@ export function ManagerAIWorkspacePage() {
 
             {!configured && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-sm leading-6 text-amber-100">
-                Để kích hoạt AI thật, backend cần các biến <strong>AI_PROVIDER=openai_compatible</strong>, <strong>AI_API_KEY</strong>, <strong>AI_BASE_URL</strong> và <strong>AI_MODEL</strong>. Khóa API không được lưu trong mã nguồn hoặc đưa lên GitHub.
+                Trợ lý AI hiện chưa sẵn sàng. Vui lòng liên hệ quản trị hệ thống để cấu hình trước khi sử dụng.
               </section>
             )}
 
@@ -151,12 +141,7 @@ export function ManagerAIWorkspacePage() {
             {busy && <div className="rounded-2xl border border-sky-700/40 bg-sky-950/30 p-5 text-sm text-sky-200">AI đang xử lý yêu cầu...</div>}
             {result && (
               <section className="rounded-2xl border border-slate-700 bg-[#142238] p-6">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="text-xl font-bold">Kết quả AI</h3>
-                  <span className={`rounded-full border px-3 py-1 text-xs font-bold ${result.scope_guard === "passed" ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-amber-500/30 bg-amber-500/10 text-amber-200"}`}>
-                    Scope Guard: {result.scope_guard}
-                  </span>
-                </div>
+                <h3 className="text-xl font-bold">Kết quả AI</h3>
                 <div className="mt-5 whitespace-pre-wrap rounded-xl border border-slate-800 bg-slate-950/30 p-5 leading-7 text-slate-200">{result.answer}</div>
                 <p className="mt-4 text-xs leading-5 text-slate-500">{result.disclaimer}</p>
               </section>
