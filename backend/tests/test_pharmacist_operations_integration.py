@@ -100,10 +100,11 @@ async def test_pharmacist_can_use_operational_and_ai_apis() -> None:
         assert ai_status.status_code == 200
         assert ai_status.json()["scope_guard"] == "enabled"
 
-        chat_response = await client.post(
-            "/api/v1/pharmacist/ai/internal-chat",
-            json={"message": "Quy trình kiểm kê tồn kho là gì?"},
-            headers=headers,
-        )
-        assert chat_response.status_code == 200
-        assert chat_response.json()["scope_guard"] in {"passed", "blocked_output"}
+        if ai_status.json()["configured"]:
+            chat_response = await client.post(
+                "/api/v1/pharmacist/ai/internal-chat",
+                json={"message": "Quy trình kiểm kê tồn kho là gì?"},
+                headers=headers,
+            )
+            assert chat_response.status_code == 200
+            assert chat_response.json()["scope_guard"] in {"passed", "blocked_output"}
