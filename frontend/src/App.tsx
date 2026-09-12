@@ -1,6 +1,13 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { RequireAuth } from "./auth/RequireAuth";
+import {
+  CashierDashboardPage,
+  CashierInvoicesPage,
+  CashierMedicineLookupPage,
+  CashierProfilePage,
+  CashierSalesPage,
+} from "./pages/CashierPages";
 import { LoginPage } from "./pages/LoginPage";
 import { ManagerAIWorkspacePage } from "./pages/ManagerAIWorkspacePage";
 import { ManagerUsersPage } from "./pages/ManagerOperationalPages";
@@ -28,6 +35,12 @@ export default function App() {
       <Route element={<RequireAuth />}>
         <Route path="/dashboard" element={<RoleDashboardPage />} />
         <Route path="/catalog" element={<MedicineCatalogCleanPage />} />
+
+        <Route path="/cashier" element={<CashierDashboardPage />} />
+        <Route path="/cashier/sales" element={<CashierSalesPage />} />
+        <Route path="/cashier/medicines" element={<CashierMedicineLookupPage />} />
+        <Route path="/cashier/invoices" element={<CashierInvoicesPage />} />
+        <Route path="/cashier/profile" element={<CashierProfilePage />} />
 
         <Route path="/pharmacist/medicines" element={<PharmacistMedicineLookupPage />} />
         <Route path="/pharmacist/inventory" element={<PharmacistFeaturePage title="Tồn kho & lô thuốc" description="Theo dõi số lượng tồn, ngưỡng tồn tối thiểu, thông tin lô và hạn sử dụng để hỗ trợ tra cứu và nghiệp vụ hằng ngày." />} />
