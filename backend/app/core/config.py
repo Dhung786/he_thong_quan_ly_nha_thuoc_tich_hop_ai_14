@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     seed_customer_password: str | None = None
     cors_origins: list[str] = ["http://localhost:5173"]
 
-    ai_provider: str = "disabled"
+    ai_provider: str = "demo"
     ai_api_key: str | None = None
     ai_base_url: str | None = None
     ai_model: str | None = None
@@ -40,10 +40,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_security_and_seed_configuration(self) -> Self:
-        if (
-            self.app_env.strip().lower() == "production"
-            and self.jwt_secret in INSECURE_JWT_PLACEHOLDERS
-        ):
+        environment = self.app_env.strip().lower()
+        if environment == "production" and self.jwt_secret in INSECURE_JWT_PLACEHOLDERS:
             raise ValueError("Production JWT_SECRET must not use a development placeholder")
 
         seed_pairs = (
@@ -58,9 +56,13 @@ class Settings(BaseSettings):
                 )
 
         provider = self.ai_provider.strip().lower()
-        if provider not in {"disabled", "openai_compatible"}:
-            raise ValueError("AI_PROVIDER must be disabled or openai_compatible")
-        if provider == "openai_compatible" and self.app_env.strip().lower() == "production":
+        if provider not in {"disabled", "demo", "openai_compatible"}:
+            raise ValueError(
+                "AI_PROVIDER must be disabled, demo or openai_compatible"
+            )
+        if environment == "production" and provider == "demo":
+            raise ValueError("Production cannot use the demo AI provider")
+        if provider == "openai_compatible" and environment == "production":
             if not (self.ai_api_key and self.ai_base_url and self.ai_model):
                 raise ValueError(
                     "Production AI provider requires AI_API_KEY, AI_BASE_URL and AI_MODEL"
