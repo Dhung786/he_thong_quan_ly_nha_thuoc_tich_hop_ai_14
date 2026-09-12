@@ -49,10 +49,6 @@ export function PharmacistProfilePage() {
                 <Info label="Trạng thái" value="Đang đăng nhập" />
                 <Info label="Quyền truy cập" value="Tra cứu thuốc, tồn kho, cảnh báo, báo cáo và AI hỗ trợ" />
               </div>
-
-              <div className="mt-8 rounded-2xl border border-slate-700 bg-slate-950/25 p-5 text-sm leading-6 text-slate-400">
-                Chức năng đổi mật khẩu chưa được bật vì backend hiện chưa có API đổi mật khẩu cho chính tài khoản Dược sĩ. Hệ thống không hiển thị nút giả để tránh thao tác không có tác dụng.
-              </div>
             </section>
           </div>
         </main>
