@@ -3,15 +3,15 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { RequireAuth } from "./auth/RequireAuth";
 import { LoginPage } from "./pages/LoginPage";
 import { ManagerAIWorkspacePage } from "./pages/ManagerAIWorkspacePage";
+import { ManagerUsersPage } from "./pages/ManagerOperationalPages";
 import {
-  ManagerExpiryPage,
-  ManagerImportsPage,
-  ManagerInventoryPage,
-  ManagerLookupPage,
-  ManagerReportsPage,
-  ManagerSalesPage,
-  ManagerUsersPage,
-} from "./pages/ManagerOperationalPages";
+  ManagerValidatedExpiryPage,
+  ManagerValidatedImportsPage,
+  ManagerValidatedInventoryPage,
+  ManagerValidatedLookupPage,
+  ManagerValidatedReportsPage,
+  ManagerValidatedSalesPage,
+} from "./pages/ManagerValidatedOperationalPages";
 import { MedicineCatalogCleanPage } from "./pages/MedicineCatalogCleanPage";
 import { PharmacistFeaturePage } from "./pages/PharmacistFeaturePage";
 import { PharmacistMedicineLookupPage } from "./pages/PharmacistMedicineLookupPage";
@@ -35,12 +35,12 @@ export default function App() {
         <Route path="/pharmacist/reports" element={<PharmacistFeaturePage title="Báo cáo" description="Xem các báo cáo phục vụ nghiệp vụ như tồn kho, tồn thấp và thuốc sắp hết hạn." status="API báo cáo đã sẵn sàng cho Quản lý" />} />
         <Route path="/pharmacist/profile" element={<PharmacistFeaturePage title="Hồ sơ" description="Xem thông tin tài khoản Dược sĩ và thực hiện các thiết lập hồ sơ được hỗ trợ." status="Đang chờ API hồ sơ" />} />
 
-        <Route path="/manager/imports" element={<ManagerImportsPage />} />
-        <Route path="/manager/sales" element={<ManagerSalesPage />} />
-        <Route path="/manager/inventory" element={<ManagerInventoryPage />} />
-        <Route path="/manager/expiry" element={<ManagerExpiryPage />} />
-        <Route path="/manager/lookup" element={<ManagerLookupPage />} />
-        <Route path="/manager/reports" element={<ManagerReportsPage />} />
+        <Route path="/manager/imports" element={<ManagerValidatedImportsPage />} />
+        <Route path="/manager/sales" element={<ManagerValidatedSalesPage />} />
+        <Route path="/manager/inventory" element={<ManagerValidatedInventoryPage />} />
+        <Route path="/manager/expiry" element={<ManagerValidatedExpiryPage />} />
+        <Route path="/manager/lookup" element={<ManagerValidatedLookupPage />} />
+        <Route path="/manager/reports" element={<ManagerValidatedReportsPage />} />
         <Route path="/manager/ai" element={<ManagerAIWorkspacePage />} />
         <Route path="/manager/users" element={<ManagerUsersPage />} />
       </Route>
