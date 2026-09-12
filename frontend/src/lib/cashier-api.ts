@@ -46,6 +46,14 @@ export interface CashierInvoice {
   items: CashierInvoiceItem[];
 }
 
+export interface CashierAIResponse {
+  answer: string;
+  provider: string;
+  model: string | null;
+  scope_guard: string;
+  disclaimer: string;
+}
+
 interface ErrorEnvelope {
   error?: unknown;
   message?: unknown;
@@ -109,4 +117,11 @@ export function cashierFinalizeInvoiceRequest(accessToken: string, invoiceId: nu
 
 export function cashierCancelInvoiceRequest(accessToken: string, invoiceId: number): Promise<CashierInvoice> {
   return requestJson<CashierInvoice>(accessToken, `/api/v1/cashier/invoices/${invoiceId}/cancel`, { method: "POST" });
+}
+
+export function cashierAssistantRequest(accessToken: string, message: string): Promise<CashierAIResponse> {
+  return requestJson<CashierAIResponse>(accessToken, "/api/v1/cashier/assistant", {
+    method: "POST",
+    body: JSON.stringify({ message }),
+  });
 }
