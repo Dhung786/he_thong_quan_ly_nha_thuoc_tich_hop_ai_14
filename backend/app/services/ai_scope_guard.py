@@ -22,6 +22,11 @@ _ALLOWED_INTERNAL_TOPICS = (
     "tài khoản",
     "phân quyền",
     "báo cáo",
+    "thu ngân",
+    "thanh toán",
+    "ca bán",
+    "mã vạch",
+    "fefo",
 )
 
 _BLOCKED_CLINICAL_PATTERNS = (
@@ -85,9 +90,8 @@ def safe_scope_rejection(reason: str) -> str:
             "hoặc dữ liệu nghiệp vụ."
         ),
         "outside_pharmacy_internal_scope": (
-            "Chatbot này chỉ trả lời các câu hỏi về thuốc, tồn kho, lô nhập, "
-            "hạn sử dụng, bán thuốc, hóa đơn, báo cáo và quy trình nội bộ "
-            "của hệ thống nhà thuốc."
+            "Chatbot này chỉ trả lời các câu hỏi về thuốc, tồn kho, lô nhập, hạn sử dụng, "
+            "bán thuốc, thanh toán, hóa đơn, ca bán, mã vạch và quy trình nội bộ của nhà thuốc."
         ),
         "unsafe_or_operational_output": (
             "Phản hồi AI đã bị Scope Guard chặn vì có nội dung vượt phạm vi an toàn."
